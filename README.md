@@ -6,8 +6,7 @@ PowerSocrata is created using the [M language](https://msdn.microsoft.com/query-
 
 ## Additional Links and Resources
 
-* [M Library Functions](https://msdn.microsoft.com/library/mt253322.aspx)
-+ [Socrata Open Data API]()
-* [M Language Specification](https://msdn.microsoft.com/library/mt807488.aspx)
-* [Power BI Developer Center](https://powerbi.microsoft.com/developers/)
-* [Data Connector Tutorial](https://github.com/Microsoft/DataConnectors/tree/master/samples/TripPin)
++ [M Library Functions](https://msdn.microsoft.com/en-us/query-bi/m/power-query-m-function-reference)
++ [Open Data Network](https://www.opendatanetwork.com/)
++ [M Language Specification](https://msdn.microsoft.com/en-us/query-bi/m/power-query-m-language-specification)
++ [Power BI Developer Center](https://powerbi.microsoft.com/developers/)
