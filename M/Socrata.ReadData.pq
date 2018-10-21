@@ -58,17 +58,10 @@ Column & Field Names
     
 */
 
-//(url as text, app_token as text, optional limit as number) as table =>
+(url as text, app_token as text, optional limit as number) as table =>
 let
 
     upper_limit = 50000, // upper limit for any call to the Socrata API
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//TESTING ONLY                                                                                                                                                          //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    url = "https://data.cityofchicago.org/resource/9pkb-4fbf.json?$where=_amount_paid>225&$limit=55000",
-    app_token = "dKUISojglB5gUYergyvSp0aSd",
-    limit = null,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Convert Query to String                                                                                                                                               //
