@@ -1,13 +1,37 @@
-// based on the RSocrata GitHub repo maintained by the City of Chicago and community
-// https://github.com/Chicago/RSocrata/
+/*
+based on the RSocrata GitHub repo maintained by the City of Chicago and community
+https://github.com/Chicago/RSocrata/
+*/
+
+/* Endpoints
+Data:
+	endpoint: "https://<hostName>/resource/<fourByFour>.json"
+Views:
+	Default:
+		endpoint: "https://<hostName>/api/views.json?method=getDefaultView&id=<fourByFour>"
+		returns: 
+	Resource Name:
+		endpoint: "https://<hostName>/api/views.json?method=getByResourceName&name=<fourByFour>"
+		returns: 
+			id: "9pkb-4fbf"
+			name: "Building Permits"
+Migrations:
+	endpoint: "https://<hostName>/api/migrations/<fourByFour>.json"
+	nbeId: "9pkb-4fbf"
+	obeId: "ydr8-5enu"
+Summary Count:
+	endpont: "https://<hostName>/resource/<fourByFour>.json?%24select=count(*)+AS+count"
+Column & Field Names
+	endpoint: "https://api.us.socrata.com/api/catalog/v1?q=Building Permits"
+*/
+
 
 /* 
 1. Validate Inputs (url and app_token): 
     - is either the url or app_token variable a null value?
     - is the app_token supplied within the url? 
-2. Parse URL
-    - use Uri.Parts, e.g., Uri.Parts("https://data.cityofchicago.org/resource/9pkb-4fbf.json?$where=_permit_type = 'PERMIT - EASY PERMIT PROCESS'&$limit=100")
     - is the URL properly formatted?
+2. Parse URL
     - is the user calling a csv- or json-formatted endpoint?
     - does the Path portion of the URL contain the text 'resource'?
     - does the Path portion of the URL contain the text 'data'?
@@ -34,29 +58,67 @@
     
 */
 
-//(url as text, optional app_token as text, optional email as text, optional password as text) as table =>
+//(url as text, app_token as text, optional limit as number) as table =>
 let
-    /* Endpoints
-    Data:
-        endpoint: "https://<hostName>/resource/<fourByFour>.json"
-    Views: 
-        endpoint: "https://<hostName>/api/views.json?method=getDefaultView&id=<fourByFour>"
-        endpoint: "https://<hostName>/api/views.json?method=getByResourceName&name=<fourByFour>"
-        id: "9pkb-4fbf"
-        name: "Building Permits"
-    Migrations:
-        endpoint: "https://<hostName>/api/migrations/<fourByFour>.json"
-        nbeId: "9pkb-4fbf"
-        obeId: "ydr8-5enu"
-    Summary Count:
-        endpont: "https://<hostName>/resource/<fourByFour>.json?%24select=count(*)+AS+count"
-    Column & Field Names
-        endpoint: "https://api.us.socrata.com/api/catalog/v1?q=Building Permits"
-    */
-    isFourByFour = (fourXfour as text) =>
+
+    upper_limit = 50000, // upper limit for any call to the Socrata API
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TESTING ONLY                                                                                                                                                          //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    url = "https://data.cityofchicago.org/resource/9pkb-4fbf.json?$where=_amount_paid>225&$limit=55000",
+    app_token = "dKUISojglB5gUYergyvSp0aSd",
+    limit = null,
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Convert Query to String                                                                                                                                               //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+    The Uri.BuildQueryString Power Query M function encodes special characters in a URL string. The Socrata API does not accept some of these encodings.
+    This function unencodes some of the more common characters that cause the API to reject a otherwise valid URL.
+*/    
+    ConvertRecordToString = (query as record) as text => 
         let
-            // ASCII representation of numbers 0-9 and letters a-z and A-Z only
-            // analogous to the regex "^[a-zA-Z0-9]*$"
+            queryRecord = Text.Replace(Text.Replace(Text.Replace(Uri.BuildQueryString(query), "%24", "$"), "%2B", "+"), "%2A", "*")
+        in
+            queryRecord,
+            
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Paginate Over Multiple Responses                                                                                                                                      //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    PaginateResponse = (n as number, offset as number, rowCount as number, upper_limit as number) as list =>
+        let
+            beg_balance = rowCount - n * upper_limit,
+            queryLimit = if beg_balance > upper_limit then upper_limit else beg_balance,
+            end_balance = beg_balance - queryLimit,
+            relativePath = CreateUri(queryLimit, offset, ""),
+            data = Json.Document(GetResponse(baseUri, relativePath, null))
+        in
+            data,
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Rebuild URL                                                                                                                                                           //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    CreateUri = (limit as number, offset  as number, whereClause as nullable text) as text =>
+        let
+            queryRecord = [#"$order" = ":id", #"$limit" = Text.From(limit), #"$offset" = Text.From(offset), #"$where" = whereClause, #"$$app_token" = app_token],
+            queryString = ConvertRecordToString(queryRecord),
+            uri = Text.Combine({requestUriParts[path],"?",queryString})
+        in
+            uri,
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Validate FourByFour                                                                                                                                                   //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    isFourByFour = (fourXfour as text) as logical =>
+        let
+            getAlphaResult = (n as number) as logical =>
+                let
+                    nthCharacter = Text.At(fourXfour,n),
+                    coerceToNumber = try Number.ToText(nthCharacter) otherwise nthCharacter,
+                    result = (List.Contains(alphanumericASCII,coerceToNumber) and n <> 4) or coerceToNumber = "-"
+                in
+                    result,
             alphanumericASCII = List.Transform({48..57,65..90,97..122}, each Character.FromNumber(_)),
             textLength = Text.Length(fourXfour),
             containsDashcorrectPosition = Text.PositionOfAny(fourXfour,{"-"}, Occurrence.All) = {4}, // does the fourXfour contain one and only one dash ("-") and in the correct position?
@@ -66,75 +128,139 @@ let
                     ()=>
                         [
                             n = 0,
-                            nthCharacter = Text.At(fourXfour,n),
-                            coerceToNumber = try Number.ToText(nthCharacter) otherwise nthCharacter,
-                            result = (List.Contains(alphanumericASCII,coerceToNumber) and n <> 4) or coerceToNumber = "-"
+                            result = getAlphaResult(n)
                         ], // initial
                     each [n] < textLength, // condition
                     each 
                         [
                             n = [n] + 1,
-                            nthCharacter = Text.At(fourXfour,n),
-                            coerceToNumber = try Number.ToText(nthCharacter) otherwise nthCharacter,
-                            result = (List.Contains(alphanumericASCII,coerceToNumber) and n <> 4) or coerceToNumber = "-"
+                            result = getAlphaResult(n)
                         ], // next
                     each [result] // selector
                 ),
             isValid = not List.Contains(List.Combine({{containsDashcorrectPosition,isNineCharacters},isAlphaNumeric}),false)
         in
             isValid,
-    GetUriParts = (uri as text) =>
+            
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Get ColumnName and Data Types                                                                                                                                         //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GetColumnDataTypes = (metaRecord as record) as record =>
+        let
+            columnsMetadata = metaRecord[columns],
+            columnsMetadataFieldNames = Record.FieldNames(Record.Combine(columnsMetadata)),
+            columnsMetadataTable = Table.FromList(columnsMetadata, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+            columnsMetadataExpanded = Table.ExpandRecordColumn(columnsMetadataTable, "Column1", {"fieldName", "dataTypeName"}),
+            FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
+            ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
+            ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","text",Replacer.ReplaceText,{"dataTypeName"}),
+            RenamedFields = Table.RenameColumns(ReplacedPoint,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
+            ConvertedToRecord = Record.FromTable(RenamedFields)
+        in
+            ConvertedToRecord,
+            
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Parse Url                                                                                                                                                             //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GetUriParts = (uri as text) as record =>
         let
             uriParts = Uri.Parts(uri),
             scheme = uriParts[Scheme], // this should always be https
             host = uriParts[Host], // e.g., data.cityofchicago.org
             path = uriParts[Path], // e.g., /resource/9pkb-4fbf.json
-            query = uriParts[Query],
-            fourByFour = 
-                if Text.Contains(uri,"resource") then 
-                    Text.BeforeDelimiter(Text.AfterDelimiter(path,"/",1),".") 
-                else 
-                    query[name], // e.g., 9pkb-4fbf
-            uriRecord = [scheme = scheme, host = host, path = path, fourByFour = fourByFour, query = query]
+            query = uriParts[Query], // e.g. [$where = "<some filter criiteria>", $$app_token = "<unique token>", $limit = 150]
+            fourByfour = Text.BetweenDelimiters(path,"resource/",".") , // e.g., 9pkb-4fbf
+            uriRecord = [scheme = scheme, host = host, path = path, fourByfour = fourByfour, query = query]
         in
-            uriRecord,            
-    GetResponse = (baseUri as text, relativePath as text, headers as record, query as record) =>
+            uriRecord,
+            
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//General http Request                                                                                                                                                  //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GetResponse = (baseUri as text, relativePath as text, optional query as nullable record) =>
         let
             call = Web.Contents(
                 baseUri,
                 [
-                    Headers = headers,
+                    Headers = [Accept="application/json"],
                     RelativePath = relativePath,
                     Query = query
                 ]
             )
         in
-            call,    
-    /* for testing purposes */
-    url = "https://data.cityofchicago.org/resource/9pkb-4fbf.json?$where=_permit_type = 'PERMIT - EASY PERMIT PROCESS'&$limit=100",
-    /* for testing purposes */
+            call,
+
     // Parse URL
     requestUriParts = GetUriParts(url),
-    requestBaseUrl = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
-    requestRelativePath = requestUriParts[path],
-    requestFourByFour = Text.BetweenDelimiters(requestRelativePath,"resource/",".json"),
-    requestQuery = requestUriParts[query],
-    requestHeaders = [Accept="application/json"],
-    checkFourByFour = isFourByFour(requestFourByFour), // e.g., 9pkb-4fbf
-    //request = Web.Contents(requestUrl, relativePath, [Headers=requestHeader]),
-    request = GetResponse(requestBaseUrl, requestRelativePath, requestHeaders, requestQuery),
-    // Get Views
-    viewsUrl = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host],"/api/views.json?method=getByResourceName&name=",requestUriParts[fourByFour]}),
-    viewsUrlParts = Uri.Parts(viewsUrl),
-    logic = false,
-            uriRecord = [scheme = scheme, host = host, path = path, fourByFour = fourByFour, query = query],
-    views = GetResponse(requestBaseUrl, requestRelativePath, requestHeaders, requestQuery),
-    responseMetadata = Value.Metadata(request),
-    resonseHeader = responseMetadata[Request.Options],
-    responseJson = Json.Document(request),
-    responseTable = Table.FromList(responseJson, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    // read the field names in the first record of the table
-    ColumnNames = Record.FieldNames(responseTable{0}[Column1]),
-    ExpandedColumn = Table.ExpandRecordColumn(responseTable, "Column1", ColumnNames, ColumnNames)
+    
+    // validate URL
+    isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then error url & " does not appear to be a valid URL. To understand how to construct a valid URL, see this page: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true,
+    isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then error "All datasets require a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. No such identifier supplied. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else error "All datasets have a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. Identifier supplied seems to be malformed. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true, // e.g., 9pkb-4fbf
+	hasToken = if Text.Length(app_token) > 0 or List.Contains(Record.FieldNames(requestUriParts[query]), "$$app_token") then true else error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'.",
+    isJson = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then error "At the moment, PowerSocrata only supports calling JSON-formatted endpoints. For example, to retrieve Chicago Building Permits, the endpoint should end with '.json': 'https://data.cityofchicago.org/resource/ydr8-5enu.json'. Future updates may include support for other data formats like CSV and GEOJSON." else true,
+	
+    baseUri = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
+    
+	// Get or set limit parameter
+    // If an upper limit was provided, use that as a provided limit
+    // If no upper limit was provided, return 0 as the provided limit
+    hasLimit = if Record.HasFields(requestUriParts[query],"$limit") or Value.Type(limit) = type number then true else false,
+	providedLimit = 
+        if hasLimit then
+            if Record.HasFields(requestUriParts[query],"$limit") then
+                Value.FromText(Record.Field(requestUriParts[query],"$limit"))
+            else
+                limit
+        else
+            null,
+
+    // Get or set row count
+    // if an upper limit was provided, use that as a row count
+    // if no upper limit was provided, query the endpoint and return the row count, e.g. "https://<hostName>/resource/<fourByFour>.json?$select=count(*)+AS+count"
+    rowCount =
+        if Value.Type(providedLimit) = type number then 
+            providedLimit
+        else 
+            let
+                countQuery = [#"$select" = "count(*)+AS+count"],
+                countQueryString = ConvertRecordToString(countQuery),
+                countRelativePathString = Text.Combine({"/resource/",requestUriParts[fourByfour],".json?",countQueryString}),
+                rowCount = Value.FromText(Json.Document(GetResponse(baseUri,countRelativePathString)){0}[count])
+            in
+                rowCount,
+
+    // define number of calls
+    modulo = Number.Mod(rowCount,upper_limit),
+    quotient = Number.IntegerDivide(rowCount,upper_limit),
+    numberOfCalls = if modulo = 0 then quotient else quotient + 1,
+
+    // Get metadata
+    requestMetadataUrl = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host],"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
+    requestMetadata = Json.Document(Web.Contents(requestMetadataUrl)),
+    datasetMetadata = Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}),
+
+    // Get column names and data types
+    columnFields = GetColumnDataTypes(datasetMetadata),
+    columnNames = Record.FieldNames(columnFields),
+
+    // Get data
+    requestData = List.Generate(
+        ()=>
+            [
+                n = 0,
+                offset = 0,
+                data = PaginateResponse(n, offset, rowCount, upper_limit)
+            ],
+            each [n] < numberOfCalls,
+            each [
+                n = [n] + 1,
+                offset = [offset] + upper_limit,
+                data = PaginateResponse(n, offset, rowCount, upper_limit)
+            ],
+            each [data]
+    ),
+    ConvertedToTable = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    ExpandedrequestDataList = Table.ExpandListColumn(ConvertedToTable, "Column1"),
+    ExpandedrequestDataRecords = Table.ExpandRecordColumn(ExpandedrequestDataList, "Column1", columnNames, columnNames)
 in
-    ExpandedColumn
+    ExpandedrequestDataRecords
