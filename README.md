@@ -8,7 +8,8 @@ PowerSocrata is created using the [M language](https://docs.microsoft.com/en-us/
 
 ## Additional Links and Resources
 
-+ [Power Query M Documentation](https://docs.microsoft.com/en-us/power-query/)
 + [Open Data Network](https://www.opendatanetwork.com/)
-+ [M Language Specification](https://msdn.microsoft.com/en-us/query-bi/m/power-query-m-language-specification)
++ [Socrata Open Data API Developer Documentation](https://dev.socrata.com/)
++ [Power Query M Documentation](https://docs.microsoft.com/en-us/power-query/)
++ [Power Query M Language Specification](https://msdn.microsoft.com/en-us/query-bi/m/power-query-m-language-specification)
 + [Power BI Developer Center](https://powerbi.microsoft.com/developers/)
