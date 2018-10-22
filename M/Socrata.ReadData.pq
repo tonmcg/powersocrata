@@ -5,24 +5,24 @@ https://github.com/Chicago/RSocrata/
 
 /* Endpoints
 Data:
-	endpoint: "https://<hostName>/resource/<fourByFour>.json"
+    endpoint: "https://<hostName>/resource/<fourByFour>.json"
 Views:
-	Default:
-		endpoint: "https://<hostName>/api/views.json?method=getDefaultView&id=<fourByFour>"
-		returns: 
-	Resource Name:
-		endpoint: "https://<hostName>/api/views.json?method=getByResourceName&name=<fourByFour>"
-		returns: 
-			id: "9pkb-4fbf"
-			name: "Building Permits"
+    Default:
+        endpoint: "https://<hostName>/api/views.json?method=getDefaultView&id=<fourByFour>"
+        returns: 
+    Resource Name:
+        endpoint: "https://<hostName>/api/views.json?method=getByResourceName&name=<fourByFour>"
+        returns: 
+            id: "9pkb-4fbf"
+            name: "Building Permits"
 Migrations:
-	endpoint: "https://<hostName>/api/migrations/<fourByFour>.json"
-	nbeId: "9pkb-4fbf"
-	obeId: "ydr8-5enu"
+    endpoint: "https://<hostName>/api/migrations/<fourByFour>.json"
+    nbeId: "9pkb-4fbf"
+    obeId: "ydr8-5enu"
 Summary Count:
-	endpont: "https://<hostName>/resource/<fourByFour>.json?%24select=count(*)+AS+count"
+    endpont: "https://<hostName>/resource/<fourByFour>.json?%24select=count(*)+AS+count"
 Column & Field Names
-	endpoint: "https://api.us.socrata.com/api/catalog/v1?q=Building Permits"
+    endpoint: "https://api.us.socrata.com/api/catalog/v1?q=Building Permits"
 */
 
 
@@ -60,7 +60,6 @@ Column & Field Names
 
 (url as text, app_token as any, optional limit as number) as table =>
 let
-
     upper_limit = 50000, // upper limit for any call to the Socrata API
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,8 +104,9 @@ let
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     CreateUri = (limit as number, offset  as number, whereClause as nullable text) as text =>
         let
-            queryRecord = [#"$order" = ":id", #"$limit" = Text.From(limit), #"$offset" = Text.From(offset), #"$where" = whereClause, #"$$app_token" = app_token],
-            queryString = ConvertRecordToString(queryRecord),
+            queryRecord = [#"$order" = ":id", #"$limit" = Text.From(limit), #"$offset" = Text.From(offset), #"$where" = whereClause],
+            tokenQueryRecord = if hasToken then Record.AddField(queryRecord, "$$app_token", app_token) else queryRecord,
+            queryString = ConvertRecordToString(tokenQueryRecord),
             uri = Text.Combine({requestUriParts[path],"?",queryString})
         in
             uri,
@@ -145,7 +145,19 @@ let
             isValid = not List.Contains(List.Combine({{containsDashcorrectPosition,isNineCharacters},isAlphaNumeric}),false)
         in
             isValid,
-            
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Get dataset row count                                                                                                                                                 //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GetRowCount = (baseUri as text, requestUriParts as record) as number =>
+        let
+            countQuery = [#"$select" = "count(*)+AS+count"],
+            countQueryString = ConvertRecordToString(countQuery),
+            countRelativePathString = Text.Combine({"/resource/",requestUriParts[fourByfour],".json?",countQueryString}),
+            rowCount = Value.FromText(Json.Document(GetResponse(baseUri,countRelativePathString)){0}[count])
+        in
+            rowCount,
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Get ColumnName and Data Types                                                                                                                                         //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,55 +207,61 @@ let
             call,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Test APP_TOKEN                                                                                                                                                  //
+//Check $$app_token                                                                                                                                                     //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     hasAppToken = (token as any) as logical =>
         let
             isInUrl = List.Contains(Record.FieldNames(requestUriParts[query]), "$$app_token"),
             isNotNull = if app_token = null then false else true,
-            isNotEmpty = if not isNotNull then false else if Text.Length(app_token) > 0 then false else true,
-            isNotMissing = not List.Contains({isInUrl,isNotNull,isNotEmpty},false)
+            isNotEmpty = if not isNotNull then false else if Text.Length(app_token) < 1 then false else true,
+            isNotMissing = List.Contains({isInUrl,isNotNull,isNotEmpty},true)
         in
             isNotMissing,
 
-    // Parse URL
-    requestUriParts = GetUriParts(url),
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Errors                                                                                                                                                                //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    noUrl_error = error "No URL was supplied.",
+    token_error = error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'.",
+    url_error = error url & " does not appear to be a valid URL. To understand how to construct a valid URL, see this page: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'.",
+    noFourByFour_error = error "All datasets require a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. No such identifier supplied. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'.",
+    badFourByFour_error = error "All datasets have a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. Identifier supplied seems to be malformed. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'.",
+    fileFormat_error = error "At the moment, PowerSocrata only supports calling JSON-formatted endpoints. For example, to retrieve Chicago Building Permits, the endpoint should end with '.json': 'https://data.cityofchicago.org/resource/ydr8-5enu.json'. Future updates may include support for other data formats like CSV and GEOJSON.",
 
+    hasURL = if url = null then false else true,
+    
+    // Parse URL
+    requestUriParts = if hasURL then GetUriParts(url) else noUrl_error,
+    
     // validate URL
-    isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then error url & " does not appear to be a valid URL. To understand how to construct a valid URL, see this page: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true,
-    isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then error "All datasets require a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. No such identifier supplied. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else error "All datasets have a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. Identifier supplied seems to be malformed. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true, // e.g., 9pkb-4fbf
-	hasToken = if not hasAppToken(app_token) then error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'." else true,
-    isJson = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then error "At the moment, PowerSocrata only supports calling JSON-formatted endpoints. For example, to retrieve Chicago Building Permits, the endpoint should end with '.json': 'https://data.cityofchicago.org/resource/ydr8-5enu.json'. Future updates may include support for other data formats like CSV and GEOJSON." else true,
-	
+    isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then url_error else true,
+    isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then noFourByFour_error else badFourByFour_error else true,
+    isValidFileFormat = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then fileFormat_error else true,
+    hasToken = if not hasAppToken(app_token) then false else true,
+    hasLimit = if Record.HasFields(requestUriParts[query],"$limit") or not (limit = null) then true else false,
+    
     baseUri = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
     
-	// Get or set limit parameter
-    // If an upper limit was provided, use that as a provided limit
-    // If no upper limit was provided, return 0 as the provided limit
-    hasLimit = if Record.HasFields(requestUriParts[query],"$limit") or Value.Type(limit) = type number then true else false,
-	providedLimit = 
-        if hasLimit then
+    // Get or set limit
+    providedLimit = 
+        if hasLimit then // If limit is provided, return limit
             if Record.HasFields(requestUriParts[query],"$limit") then
-                Value.FromText(Record.Field(requestUriParts[query],"$limit"))
+                Value.FromText(Record.Field(requestUriParts[query],"$limit")) // provided in url as a query parameter
             else
-                limit
+                limit // provided as a Power Query M parameter
         else
-            null,
+            null, // If no limit is provided, return null
 
     // Get or set row count
-    // if an upper limit was provided, use that as a row count
-    // if no upper limit was provided, query the endpoint and return the row count, e.g. "https://<hostName>/resource/<fourByFour>.json?$select=count(*)+AS+count"
     rowCount =
-        if Value.Type(providedLimit) = type number then 
+        if not hasToken and (providedLimit > 1000 or providedLimit = null) then // if no app_token is provided and (provided limit is greater than 1000 or no limit is provided), set row_count to 1000
+            1000
+        else if not hasToken and providedLimit <= 1000 then // if no app_token is provided and provided limit is less than 1000, set row_count to provided limit
             providedLimit
-        else 
-            let
-                countQuery = [#"$select" = "count(*)+AS+count"],
-                countQueryString = ConvertRecordToString(countQuery),
-                countRelativePathString = Text.Combine({"/resource/",requestUriParts[fourByfour],".json?",countQueryString}),
-                rowCount = Value.FromText(Json.Document(GetResponse(baseUri,countRelativePathString)){0}[count])
-            in
-                rowCount,
+        else if not hasLimit then // if no limit is provided, query dataset count and set row_count to that number,"https://<hostName>/resource/<fourByFour>.json?$select=count(*)+AS+count"
+            GetRowCount(baseUri, requestUriParts)
+        else // if limit is provided, set row_count to provided limit
+            providedLimit,
 
     // define number of calls
     numberOfCalls = CalculateNumberOfCalls(rowCount,upper_limit),
@@ -258,7 +276,7 @@ let
     columnNames = Record.FieldNames(columnFields),
 
     // Get data
-    requestData = if List.Contains({isValidURL,isValidFourByFour,hasToken},false) then List.Generate(
+    requestData = if not List.Contains({isValidURL,isValidFourByFour,isValidFileFormat},false) then List.Generate(
         ()=>
             [
                 n = 0,
@@ -272,7 +290,7 @@ let
                 data = PaginateResponse(n, offset, rowCount, upper_limit)
             ],
             each [data]
-    ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, application token, or file format was supplied.",
+    ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, or file format was supplied.",
     ConvertedToTable = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
     ExpandedrequestDataList = Table.ExpandListColumn(ConvertedToTable, "Column1"),
     ExpandedrequestDataRecords = Table.ExpandRecordColumn(ExpandedrequestDataList, "Column1", columnNames, columnNames) meta datasetMetadata
