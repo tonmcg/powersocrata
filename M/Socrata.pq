@@ -1,0 +1,48 @@
+let
+    Source = Expression.Evaluate(
+        Text.FromBinary(
+            Web.Contents("https://raw.githubusercontent.com/tonmcg/powersocrata/master/M/Socrata.ReadData.pq")),
+            [
+                #"Text.Replace" = Text.Replace,
+                #"Uri.BuildQueryString" = Uri.BuildQueryString,
+                #"Json.Document" = Json.Document,
+                #"Text.From" = Text.From,
+                #"Text.Combine" = Text.Combine,
+                #"Text.At" = Text.At,
+                #"Number.ToText" = Number.ToText,
+                #"List.Contains" = List.Contains,
+                #"List.Transform" = List.Transform,
+                #"Character.FromNumber" = Character.FromNumber,
+                #"Text.Length" = Text.Length,
+                #"Text.PositionOfAny" = Text.PositionOfAny,
+                #"Occurrence.All" = Occurrence.All,
+                #"List.Generate" = List.Generate,
+                #"List.Combine" = List.Combine,
+                #"Record.FieldNames" = Record.FieldNames,
+                #"Record.Combine" = Record.Combine,
+                #"Table.FromList" = Table.FromList,
+                #"Splitter.SplitByNothing" = Splitter.SplitByNothing,
+                #"ExtraValues.Error" = ExtraValues.Error,
+                #"Table.ExpandRecordColumn" = Table.ExpandRecordColumn,
+                #"Table.SelectRows" = Table.SelectRows,
+                #"Text.StartsWith" = Text.StartsWith,
+                #"Table.ReplaceValue" = Table.ReplaceValue,
+                #"Replacer.ReplaceText" = Replacer.ReplaceText,
+                #"Table.RenameColumns" = Table.RenameColumns,
+                #"Record.FromTable" = Record.FromTable,
+                #"Uri.Parts" = Uri.Parts,
+                #"Text.BetweenDelimiters" = Text.BetweenDelimiters,
+                #"Web.Contents" = Web.Contents,
+                #"Record.FieldOrDefault" = Record.FieldOrDefault,
+                #"Text.Contains" = Text.Contains,
+                #"Record.HasFields" = Record.HasFields,
+                #"Value.Type" = Value.Type,
+                #"Value.FromText" = Value.FromText,
+                #"Record.Field" = Record.Field,
+                #"Number.Mod" = Number.Mod,
+                #"Number.IntegerDivide" = Number.IntegerDivide,
+                #"Record.SelectFields" = Record.SelectFields,
+                #"Table.ExpandListColumn" = Table.ExpandListColumn
+            ])
+in
+    Source
