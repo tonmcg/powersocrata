@@ -58,10 +58,21 @@ Column & Field Names
     
 */
 
-(url as text, app_token as text, optional limit as number) as table =>
+(url as text, app_token as any, optional limit as number) as table =>
 let
 
     upper_limit = 50000, // upper limit for any call to the Socrata API
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Calculate Number of Times to Call API (Pagination)                                                                                                                    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    CalculateNumberOfCalls = (rowCount as number, upper_limit as number) as number =>
+        let
+            modulo = Number.Mod(rowCount,upper_limit),
+            quotient = Number.IntegerDivide(rowCount,upper_limit),
+            numberOfCalls = if modulo = 0 then quotient else quotient + 1
+        in
+            numberOfCalls,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Convert Query to String                                                                                                                                               //
@@ -69,7 +80,7 @@ let
 /*
     The Uri.BuildQueryString Power Query M function encodes special characters in a URL string. The Socrata API does not accept some of these encodings.
     This function unencodes some of the more common characters that cause the API to reject a otherwise valid URL.
-*/    
+*/
     ConvertRecordToString = (query as record) as text => 
         let
             queryRecord = Text.Replace(Text.Replace(Text.Replace(Uri.BuildQueryString(query), "%24", "$"), "%2B", "+"), "%2A", "*")
@@ -183,13 +194,25 @@ let
         in
             call,
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Test APP_TOKEN                                                                                                                                                  //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    hasAppToken = (token as any) as logical =>
+        let
+            isInUrl = List.Contains(Record.FieldNames(requestUriParts[query]), "$$app_token"),
+            isNotNull = if app_token = null then false else true,
+            isNotEmpty = if not isNotNull then false else if Text.Length(app_token) > 0 then false else true,
+            isNotMissing = not List.Contains({isInUrl,isNotNull,isNotEmpty},false)
+        in
+            isNotMissing,
+
     // Parse URL
     requestUriParts = GetUriParts(url),
-    
+
     // validate URL
     isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then error url & " does not appear to be a valid URL. To understand how to construct a valid URL, see this page: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true,
     isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then error "All datasets require a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. No such identifier supplied. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else error "All datasets have a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. Identifier supplied seems to be malformed. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'." else true, // e.g., 9pkb-4fbf
-	hasToken = if Text.Length(app_token) > 0 or List.Contains(Record.FieldNames(requestUriParts[query]), "$$app_token") then true else error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'.",
+	hasToken = if not hasAppToken(app_token) then error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'." else true,
     isJson = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then error "At the moment, PowerSocrata only supports calling JSON-formatted endpoints. For example, to retrieve Chicago Building Permits, the endpoint should end with '.json': 'https://data.cityofchicago.org/resource/ydr8-5enu.json'. Future updates may include support for other data formats like CSV and GEOJSON." else true,
 	
     baseUri = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
@@ -223,9 +246,7 @@ let
                 rowCount,
 
     // define number of calls
-    modulo = Number.Mod(rowCount,upper_limit),
-    quotient = Number.IntegerDivide(rowCount,upper_limit),
-    numberOfCalls = if modulo = 0 then quotient else quotient + 1,
+    numberOfCalls = CalculateNumberOfCalls(rowCount,upper_limit),
 
     // Get metadata
     requestMetadataUrl = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host],"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
@@ -237,7 +258,7 @@ let
     columnNames = Record.FieldNames(columnFields),
 
     // Get data
-    requestData = List.Generate(
+    requestData = if List.Contains({isValidURL,isValidFourByFour,hasToken},false) then List.Generate(
         ()=>
             [
                 n = 0,
@@ -251,9 +272,9 @@ let
                 data = PaginateResponse(n, offset, rowCount, upper_limit)
             ],
             each [data]
-    ),
+    ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, application token, or file format was supplied.",
     ConvertedToTable = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
     ExpandedrequestDataList = Table.ExpandListColumn(ConvertedToTable, "Column1"),
-    ExpandedrequestDataRecords = Table.ExpandRecordColumn(ExpandedrequestDataList, "Column1", columnNames, columnNames)
+    ExpandedrequestDataRecords = Table.ExpandRecordColumn(ExpandedrequestDataList, "Column1", columnNames, columnNames) meta datasetMetadata
 in
     ExpandedrequestDataRecords
