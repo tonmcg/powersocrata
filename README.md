@@ -6,6 +6,12 @@ PowerSocrata is a series of functions that enable users to connect to and access
 
 PowerSocrata is created using the [M language](https://docs.microsoft.com/en-us/power-query/), the same language used by the Power Query user experience found in Power BI Desktop and Excel 2016.
 
+## Examples
++ [Baltimore City Emergency 911 Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
+
+## Sample Template
++ [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
+
 ## Additional Links and Resources
 
 + [Open Data Network](https://www.opendatanetwork.com/)
