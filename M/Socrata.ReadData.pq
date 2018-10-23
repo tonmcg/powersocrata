@@ -94,7 +94,7 @@ let
             beg_balance = rowCount - n * upper_limit,
             queryLimit = if beg_balance > upper_limit then upper_limit else beg_balance,
             end_balance = beg_balance - queryLimit,
-            relativePath = CreateUri(queryLimit, offset, ""),
+            relativePath = CreateUri(queryLimit, offset, whereClause),
             data = Json.Document(GetResponse(baseUri, relativePath, null))
         in
             data,
@@ -151,7 +151,7 @@ let
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     GetRowCount = (baseUri as text, requestUriParts as record) as number =>
         let
-            countQuery = [#"$select" = "count(*)+AS+count"],
+            countQuery = [#"$select" = "count(*)+AS+count", #"$where" = whereClause],
             countQueryString = ConvertRecordToString(countQuery),
             countRelativePathString = Text.Combine({"/resource/",requestUriParts[fourByfour],".json?",countQueryString}),
             rowCount = Value.FromText(Json.Document(GetResponse(baseUri,countRelativePathString)){0}[count])
@@ -239,8 +239,12 @@ let
     isValidFileFormat = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then fileFormat_error else true,
     hasToken = if not hasAppToken(app_token) then false else true,
     hasLimit = if Record.HasFields(requestUriParts[query],"$limit") or not (limit = null) then true else false,
+    hasWhereClause = Record.HasFields(requestUriParts[query],"$where"),
     
     baseUri = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
+    
+    // Get or set where clause
+    whereClause = if hasWhereClause then Record.Field(requestUriParts[query], "$where") else "",
     
     // Get or set limit
     providedLimit = 
