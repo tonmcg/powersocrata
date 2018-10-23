@@ -8,6 +8,22 @@ PowerSocrata is created using the [M language](https://docs.microsoft.com/en-us/
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
+### Installation
+```
+let
+    Source = 
+        Expression.Evaluate(
+            Text.FromBinary(
+                Web.Contents(
+                    "https://raw.githubusercontent.com/tonmcg/powersocrata/master/M/Socrata.ReadData.pq"
+                )
+            ),
+            #shared
+        )
+in
+    Source
+```
+
 ### Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
