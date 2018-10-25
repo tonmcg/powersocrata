@@ -62,9 +62,9 @@ Column & Field Names
 let
     upper_limit = 50000, // upper limit for any call to the Socrata API
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Calculate Number of Times to Call API (Pagination)                                                                                                                    //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+Calculate Number of Times to Call API (Pagination)
+*/
     CalculateNumberOfCalls = (rowCount as number, upper_limit as number) as number =>
         let
             modulo = Number.Mod(rowCount,upper_limit),
@@ -73,47 +73,33 @@ let
         in
             numberOfCalls,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Convert Query to String                                                                                                                                               //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
+Convert Query to String
     The Uri.BuildQueryString Power Query M function encodes special characters in a URL string. The Socrata API does not accept some of these encodings.
     This function unencodes some of the more common characters that cause the API to reject a otherwise valid URL.
+	TODO: 
+		Remove this function but keep replace function
 */
     ConvertRecordToString = (query as record) as text => 
         let
             queryRecord = Text.Replace(Text.Replace(Text.Replace(Uri.BuildQueryString(query), "%24", "$"), "%2B", "+"), "%2A", "*")
         in
             queryRecord,
-            
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Paginate Over Multiple Responses                                                                                                                                      //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    PaginateResponse = (n as number, offset as number, rowCount as number, upper_limit as number) as list =>
-        let
-            beg_balance = rowCount - n * upper_limit,
-            queryLimit = if beg_balance > upper_limit then upper_limit else beg_balance,
-            end_balance = beg_balance - queryLimit,
-            relativePath = CreateUri(queryLimit, offset, whereClause),
-            data = Json.Document(GetResponse(baseUri, relativePath, null))
-        in
-            data,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Rebuild URL                                                                                                                                                           //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    CreateUri = (limit as number, offset  as number, whereClause as nullable text) as text =>
+/*
+Rebuild URL
+*/
+    CreateQuery = (offset  as number, page_limit as number) as record =>
         let
-            queryRecord = [#"$order" = ":id", #"$limit" = Text.From(limit), #"$offset" = Text.From(offset), #"$where" = whereClause],
-            tokenQueryRecord = if hasToken then Record.AddField(queryRecord, "$$app_token", app_token) else queryRecord,
-            queryString = ConvertRecordToString(tokenQueryRecord),
-            uri = Text.Combine({requestUriParts[path],"?",queryString})
+            initialQuery = [#"$order" = ":id", #"$limit" = Text.From(page_limit), #"$offset" = Text.From(offset)],
+            whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
+            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery
         in
-            uri,
+            tokenQuery,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Validate FourByFour                                                                                                                                                   //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+Validate FourByFour
+*/
     isFourByFour = (fourXfour as text) as logical =>
         let
             getAlphaResult = (n as number) as logical =>
@@ -146,22 +132,34 @@ let
         in
             isValid,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Get dataset row count                                                                                                                                                 //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    GetRowCount = (baseUri as text, requestUriParts as record) as number =>
+/*
+Get dataset row count
+TODO:
+	combine CreateQuery with steps in this query
+	refactor GetPage so rowCount can work with it
+*/
+
+    GetRowCount = () as number =>
         let
-            countQuery = [#"$select" = "count(*)+AS+count", #"$where" = whereClause],
-            countQueryString = ConvertRecordToString(countQuery),
-            countRelativePathString = Text.Combine({"/resource/",requestUriParts[fourByfour],".json?",countQueryString}),
-            rowCount = Value.FromText(Json.Document(GetResponse(baseUri,countRelativePathString)){0}[count])
+            initialQuery = [#"$select" = "count(*) AS count"],
+            whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
+            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery,
+            rowCount = Value.FromText(Json.Document(
+                Web.Contents(
+                baseUri,
+                [
+                    Headers = [Accept="application/json"],
+                    RelativePath = relativePath,
+                    Query = tokenQuery
+                ]
+            )){0}[count])
         in
             rowCount,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Get ColumnName and Data Types                                                                                                                                         //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    GetColumnDataTypes = (metaRecord as record) as record =>
+/*
+Get ColumnName and Data Types
+*/
+    GetColumnDataTypes = (metaRecord as record) as table =>
         let
             columnsMetadata = metaRecord[columns],
             columnsMetadataFieldNames = Record.FieldNames(Record.Combine(columnsMetadata)),
@@ -169,15 +167,16 @@ let
             columnsMetadataExpanded = Table.ExpandRecordColumn(columnsMetadataTable, "Column1", {"fieldName", "dataTypeName"}),
             FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
             ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
-            ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","text",Replacer.ReplaceText,{"dataTypeName"}),
-            RenamedFields = Table.RenameColumns(ReplacedPoint,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
-            ConvertedToRecord = Record.FromTable(RenamedFields)
+            ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
+            SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
+            RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Type"}}),
+            TextToType = Table.TransformColumns(RenamedFields,{{"Type", Expression.Evaluate}})
         in
-            ConvertedToRecord,
-            
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Parse Url                                                                                                                                                             //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            TextToType,
+
+/*
+Parse Url
+*/
     GetUriParts = (uri as text) as record =>
         let
             uriParts = Uri.Parts(uri),
@@ -189,26 +188,57 @@ let
             uriRecord = [scheme = scheme, host = host, path = path, fourByfour = fourByfour, query = query]
         in
             uriRecord,
-            
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//General http Request                                                                                                                                                  //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    GetResponse = (baseUri as text, relativePath as text, optional query as nullable record) =>
+
+/*
+Paginate Over Multiple Responses
+*/
+    GetAllPages = (n as number, offset as number) as table =>
         let
-            call = Web.Contents(
+            beg_balance = rowCount - n * upper_limit,
+            page_limit = if beg_balance > upper_limit then upper_limit else beg_balance,
+            end_balance = beg_balance - page_limit,
+            query = CreateQuery(offset, page_limit),
+            data = GetPage(query)
+       in
+            data,
+
+/*
+Process Response
+*/
+    ProcessResults = (response as binary) as table =>
+        let
+            body = Json.Document(response),
+            data = Table.FromRecords(body),
+            responseColumns = Table.ColumnNames(data),
+            matchedColumns = List.Intersect({columnNames, responseColumns}),
+            responseTypes = List.Select(columnTypes, (r) =>  List.Contains(matchedColumns, r{0})),
+            final = Table.TransformColumnTypes(data,responseTypes)
+        in
+            final,
+
+/*
+General http Request
+*/
+    GetPage = (optional query as nullable record) as table => 
+        let
+            response = Web.Contents(
                 baseUri,
                 [
                     Headers = [Accept="application/json"],
                     RelativePath = relativePath,
                     Query = query
                 ]
-            )
+            ),
+            response_status = Value.Metadata(response)[Response.Status]
         in
-            call,
+            if response_status <> 200 then
+                Table.FromRows({})
+            else
+                ProcessResults(response),
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Check $$app_token                                                                                                                                                     //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+Check $$app_token
+*/
     hasAppToken = (token as any) as logical =>
         let
             isInUrl = List.Contains(Record.FieldNames(requestUriParts[query]), "$$app_token"),
@@ -218,9 +248,9 @@ let
         in
             isNotMissing,
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Errors                                                                                                                                                                //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+Errors
+*/
     noUrl_error = error "No URL was supplied.",
     token_error = error "Application token (app token) not found. To enjoy higher throttling limits, please supply an app token as part of the URL. See this page for more information: 'https://dev.socrata.com/docs/app-tokens.html#using-your-application-token'.",
     url_error = error url & " does not appear to be a valid URL. To understand how to construct a valid URL, see this page: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'.",
@@ -228,23 +258,28 @@ let
     badFourByFour_error = error "All datasets have a unique identifier - eight alphanumeric characters split into two four-character phrases by a dash. Identifier supplied seems to be malformed. Check the URL and try again. See this page for more information: 'https://dev.socrata.com/docs/endpoints.html#what-is-an-api-endpoint'.",
     fileFormat_error = error "At the moment, PowerSocrata only supports calling JSON-formatted endpoints. For example, to retrieve Chicago Building Permits, the endpoint should end with '.json': 'https://data.cityofchicago.org/resource/ydr8-5enu.json'. Future updates may include support for other data formats like CSV and GEOJSON.",
 
+    // parse URL
     hasURL = if url = null then false else true,
-    
-    // Parse URL
     requestUriParts = if hasURL then GetUriParts(url) else noUrl_error,
-    
-    // validate URL
+
+    // if supplied, validate URL
     isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then url_error else true,
     isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then noFourByFour_error else badFourByFour_error else true,
     isValidFileFormat = if not Text.Contains(requestUriParts[path], ".json") or Text.Contains(requestUriParts[path], ".csv") or Text.Contains(requestUriParts[path], ".geojson") then fileFormat_error else true,
+    
+    // check URL for the presence of $$app_token, $limit, and $where parameters
     hasToken = if not hasAppToken(app_token) then false else true,
     hasLimit = if Record.HasFields(requestUriParts[query],"$limit") or not (limit = null) then true else false,
     hasWhereClause = Record.HasFields(requestUriParts[query],"$where"),
-    
+
+    // set base uri
     baseUri = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host]}),
-    
+
+    // set relative path
+    relativePath = requestUriParts[path],
+
     // Get or set where clause
-    whereClause = if hasWhereClause then Record.Field(requestUriParts[query], "$where") else "",
+    whereClause = if hasWhereClause then Record.Field(requestUriParts[query],"$where") else "",
     
     // Get or set limit
     providedLimit = 
@@ -263,7 +298,7 @@ let
         else if not hasToken and providedLimit <= 1000 then // if no app_token is provided and provided limit is less than 1000, set row_count to provided limit
             providedLimit
         else if not hasLimit then // if no limit is provided, query dataset count and set row_count to that number,"https://<hostName>/resource/<fourByFour>.json?$select=count(*)+AS+count"
-            GetRowCount(baseUri, requestUriParts)
+            GetRowCount()
         else // if limit is provided, set row_count to provided limit
             providedLimit,
 
@@ -271,32 +306,33 @@ let
     numberOfCalls = CalculateNumberOfCalls(rowCount,upper_limit),
 
     // Get metadata
-    requestMetadataUrl = Text.Combine({requestUriParts[scheme],"://",requestUriParts[host],"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
+    requestMetadataUrl = Text.Combine({baseUri,"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
     requestMetadata = Json.Document(Web.Contents(requestMetadataUrl)),
-    datasetMetadata = Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}),
+    datasetMetadata = Record.AddField(Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}), "rowCount", rowCount),
 
     // Get column names and data types
     columnFields = GetColumnDataTypes(datasetMetadata),
-    columnNames = Record.FieldNames(columnFields),
+    columnNames = columnFields[Name],
+    FieldValues = Table.AddColumn(columnFields, "Custom", each Record.FieldValues(_)),
+    columnTypes = Table.RemoveColumns(FieldValues,{"Name", "Type"})[Custom],
 
     // Get data
     requestData = if not List.Contains({isValidURL,isValidFourByFour,isValidFileFormat},false) then List.Generate(
-        ()=>
-            [
-                n = 0,
-                offset = 0,
-                data = PaginateResponse(n, offset, rowCount, upper_limit)
-            ],
-            each [n] < numberOfCalls,
-            each [
-                n = [n] + 1,
-                offset = [offset] + upper_limit,
-                data = PaginateResponse(n, offset, rowCount, upper_limit)
-            ],
-            each [data]
+        ()=> [
+            n = 0,
+            offset = 0,
+            data = GetAllPages(n, offset)
+        ],
+        each [n] < numberOfCalls,
+        each [
+            n = [n] + 1,
+            offset = [offset] + upper_limit,
+            data = GetAllPages(n, offset)
+        ],
+        each [data]
     ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, or file format was supplied.",
-    ConvertedToTable = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    ExpandedrequestDataList = Table.ExpandListColumn(ConvertedToTable, "Column1"),
-    ExpandedrequestDataRecords = Table.ExpandRecordColumn(ExpandedrequestDataList, "Column1", columnNames, columnNames) meta datasetMetadata
+    tableOfPages = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    firstRow = tableOfPages{0}?,
+    final = Table.TransformColumnTypes(Table.ExpandTableColumn(tableOfPages, "Column1", columnNames), columnTypes)
 in
-    ExpandedrequestDataRecords
+    final
