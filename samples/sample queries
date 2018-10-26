@@ -1,17 +1,25 @@
-resource location:
-https://data.baltimorecity.gov/resource/m8g9-abgb.json?
-
 count of records
 $select=count(*)+AS+count
+
+app token:
+&$$app_token=
+
+
+************************************************************************************************************
+BALTIMORE CITY 911 CALLS
+************************************************************************************************************
+
+resource location:
+https://data.baltimorecity.gov/resource/m8g9-abgb.json?
 
 needed columns:
 $select=recordId,calldatetime,priority,description,location,location_zip
 
 sample where clause:
-$where=priority='High'
+priority='High'
 
-sample dateTime where clause:
-$where=calldatetime>2017-01-01T00:01:00.000
+sample datetime where clause:
+calldatetime>'2017-01-01T00:00:00.000'
 
 Baltimore City boudaries:
 [[[-76.71129366997027,39.37195703067297],[-76.52967423510157,39.37197190004332],[-76.52985830094921,39.20962295330451],[-76.54972531264977,39.197233450625134],[-76.58367312662826,39.20812053179621],[-76.61161075881019,39.23439454752913],[-76.71116134911031,39.27783849660702],[-76.71129366997027,39.37195703067297]]]}
@@ -19,6 +27,42 @@ Baltimore City boudaries:
 sample within boundary clause:
 $where=within_polygon(location, 'MULTIPOLYGON (((-76.71129366997027 39.37195703067297, -76.52967423510157 39.37197190004332, -76.52985830094921 39.20962295330451, -76.54972531264977 39.197233450625134, -76.58367312662826 39.20812053179621, -76.61161075881019 39.23439454752913, -76.71116134911031 39.27783849660702, -76.71129366997027 39.37195703067297)))')
 
-https://data.baltimorecity.gov/resource/m8g9-abgb.json?$select=count(*)+AS+count&$where=within_polygon(location,%20%27MULTIPOLYGON%20(((-76.71129366997027%2039.37195703067297,%20-76.52967423510157%2039.37197190004332,%20-76.52985830094921%2039.20962295330451,%20-76.54972531264977%2039.197233450625134,%20-76.58367312662826%2039.20812053179621,%20-76.61161075881019%2039.23439454752913,%20-76.71116134911031%2039.27783849660702,%20-76.71129366997027%2039.37195703067297)))%27)%20AND%20priority=%27High%27%20AND%20calldatetime%20between%20%272017-01-10T12:00:00%27%20and%20%272018-10-10T14:00:00%27
+https://data.baltimorecity.gov/resource/m8g9-abgb.json?$where=within_polygon(location,+'MULTIPOLYGON+(((-76.71129366997027+39.37195703067297,+-76.52967423510157+39.37197190004332,+-76.52985830094921+39.20962295330451,+-76.54972531264977+39.197233450625134,+-76.58367312662826+39.20812053179621,+-76.61161075881019+39.23439454752913,+-76.71116134911031+39.27783849660702,+-76.71129366997027+39.37195703067297)))')+AND+priority='High'+AND+calldatetime>'2017-01-01T00:00:00.000'&$select=count(*)+AS+count
+
+
+************************************************************************************************************
+SAN FRANCISCO 911 CALLS
+************************************************************************************************************
+
+resource location:
+https://data.sfgov.org/resource/fjjd-jecq.json
+
+sample where clause:
+address_type<>'Geo-Override'+AND+original_crimetype_name='Homeless+Complaint'
+
+sample datetime where clause:
+call_dttm>'2017-01-01T00:00:00.000'
+
+sample count:
+https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2017-01-01T00:00:00.000'&$select=count(*)+AS+count
+
+
+************************************************************************************************************
+SEATTLE 911 CALLS
+************************************************************************************************************
+
+resource location:
+https://data.seattle.gov/resource/grwu-wqtk.json
+
+sample where clause:
+longitude+IS+NOT+NULL+OR+latitude+IS+NOT+NULL
+
+sample datetime where clause:
+datetime>'2017-01-01T00:00:00.000'
+
+sample count:
+https://data.seattle.gov/resource/grwu-wqtk.json?$where=(longitude+IS+NOT+NULL+OR+latitude+IS+NOT+NULL)+AND+datetime>'2017-01-01T00:00:00.000'&$select=count(*)+AS+count
+
+
 
 
