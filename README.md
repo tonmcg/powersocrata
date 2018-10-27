@@ -4,7 +4,7 @@ PowerSocrata
 ## Overview
 PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
 
-PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. PowerSocrata aims to provide the same SoDA functionality found in popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M langugae is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
+PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. PowerSocrata aims to provide the same SoDA functionality found in popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M language is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
