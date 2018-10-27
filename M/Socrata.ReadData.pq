@@ -266,7 +266,7 @@ Define Coordinate Types
 */
     DefineCoordinateTypes = (coordinateTable as table, coordinateTypes as list, pointColumn as text) as table =>
         let
-            FilteredCoordinates = Table.SelectRows(coordinateTable, each ([location] <> null)),
+            FilteredCoordinates = Table.SelectRows(coordinateTable, (r) => Record.Field(r, pointColumn) <> null),
             ExpandedPointColumn = Table.ExpandRecordColumn(FilteredCoordinates, pointColumn, {"coordinates"}),
             ExtractedCoordinates = Table.TransformColumns(ExpandedPointColumn, {"coordinates", each Text.Combine(List.Transform(_, Text.From), ";"), type text}),
             SplitCoordinates = Table.SplitColumn(ExtractedCoordinates, "coordinates", Splitter.SplitTextByDelimiter(";", QuoteStyle.Csv), {"coordinates.longitude", "coordinates.latitude"}),
