@@ -132,7 +132,8 @@ TODO:
         let
             initialQuery = [#"$select" = "count(*) AS count"],
             whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
-            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery,
+            token = if hasToken and app_token = null then Record.Field(requestUriParts[query], "$$app_token") else if hasToken and app_token <> null then app_token else null,
+            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", token) else whereQuery,
             rowCount = Value.FromText(Json.Document(
                 Web.Contents(
                 baseUri,
