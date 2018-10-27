@@ -1,16 +1,26 @@
 PowerSocrata
 ==============
 
+* [Overview](#overview)
+* [Installation](#installation)
+* [Package Features](#package-features)
+    * [Download Datasets](#download-datasets)
+* [Power BI Report Examples](#power-bi-report-examples)
+* [Power BI Sample Template](#power-bi-sample-template)
+* [Additional Links and Resources](#additional-links-and-resources)
+
 ## Overview
 PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
 
-PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. PowerSocrata aims to provide the same SoDA functionality found in popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M langugae is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
+PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. PowerSocrata aims to provide the same SoDA functionality found in popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M language is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
-### Installation
-
-We name this query "ReadSocrata".
+## Installation
+1. Launch the Power Query Editor pane.
+2. Select Blank Query as the New Source:
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query.png)
+3. Open the Advanced Query Editor dialog and paste the following code in its entirety:
 ``` javascript
 let
     Source = 
@@ -25,50 +35,58 @@ let
 in
     Source
 ```
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Advanced%20Query%20Editor%20Dialog.png)
 
-### Package Features
+4. Click Done.
+5. Power Query will ask you to specify how to connect to this file. Click Edit Credentials.
+6. In the Access Web Content dialog, choose to connect anonymously. Click Connect.
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Access%20Web%20Content%20Dialog.png)
+7. Rename this query to `ReadSocrata`.
 
-#### Download Various Open Data Network Datasets
+## Package Features
 
-Return the first 1,000 records from the Seattle Real Time Fire 911 Calls dataset:
+### Download Datasets
+
+This code snippet returns the first 1,000 records from the San Francisco Police Department Calls for Service dataset:
 ``` javascript
 let
-    data = ReadSocrata("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json", null, null)
 in
     data
 ```
 
-Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override':
+We can also ask the Socrata API to return a subset, summary, or specific sorting of the data by utilizing its distinctive query language, [Socrata Query Language or SoQL](https://dev.socrata.com/docs/queries/). SoQL clauses are parameters that define the criteria by which the dataset provider will filter, summarize, or sort our desired result. 
+
+For example, the following query returns the first 100K calls since 2016 categorized as "Homeless Complaint" from the same dataset:
 ``` javascript
 let
-    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <APP TOKEN>, 1000000)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'", <APP TOKEN>, 100000)
 in
     data
 ```
+In the example above, we supplied a SoQL `$where` clause within the first parameter of the `ReadSocrata` function, which asked the dataset provider to filter both the `original_crimetype_name` and `call_dttm` columns to our defined criteria. We also defined "100000" as the third parameter in the `ReadSocrata` function, which further limited the results to the first 100K records.
 
-Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token).
+By the way, did you notice the `APP TOKEN` parameter in the function above? Any PowerSocrata query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token). For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
 How do we use the app token? We supply it to our query in one of two ways:
 1. As the second parameter in the `ReadSocrata` function like we did above
-2. Using the `$$app_token` as a parameter as part of our URL
+2. As a `$$app_token` parameter within your request URL string, as shown below
 
-Return the same dataset as above but this time supply the `$$app_token` in the URL:
+In this example, we supply our app token within the SoQL `$$app_token` clause in the URL string. This should return the same dataset as above:
 ``` javascript
 let
-    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
 in
     data
 ```
-For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
-### Power BI Report Examples
+## Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
-### Power BI Sample Template
+## Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
 
 ## Additional Links and Resources
-
 + [Open Data Network](https://www.opendatanetwork.com/)
 + [Socrata Open Data API Developer Documentation](https://dev.socrata.com/)
 + [Power Query M Documentation](https://docs.microsoft.com/en-us/power-query/)
