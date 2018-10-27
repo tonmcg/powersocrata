@@ -1,14 +1,13 @@
 PowerSocrata
 ==============
 
-+ [Overview](#overview)
-+ [Installation](#installation)
-+ [Package Features](#package-features)
-+ [Power BI Report Examples](#report-examples)
-+ [Power BI Sample Template](#sample-template)
-+ [Additional Links and Resources](#additional-links-resources)
+* [Overview](#overview)
+* [Installation](#installation)
+* [Package Features](#package-features)
+* [Power BI Report Examples](#report-examples)
+* [Power BI Sample Template](#sample-template)
+* [Additional Links and Resources](#additional-links-resources)
 
-<a name="overview" />
 ## Overview
 PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
 
@@ -16,7 +15,6 @@ PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
-<a name="installation" />
 ## Installation
 1. Launch the Power Query Editor pane.
 2. Select Blank Query as the New Source:
@@ -44,7 +42,6 @@ in
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Access%20Web%20Content%20Dialog.png)
 7. Rename this query to `ReadSocrata`.
 
-<a name="package-features" />
 ## Package Features
 
 ### Download Various Open Data Network Datasets
@@ -80,15 +77,12 @@ in
 ```
 For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
-<a name="report-examples" />
 ## Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
-<a name="sample-template" />
 ## Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
 
-<a name="additional-links-resources" />
 ## Additional Links and Resources
 + [Open Data Network](https://www.opendatanetwork.com/)
 + [Socrata Open Data API Developer Documentation](https://dev.socrata.com/)
