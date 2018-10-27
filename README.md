@@ -16,8 +16,12 @@ PowerSocrata
 * [Resources](#resources)
 
 ## Installing
+
 1. Launch the Power Query Editor pane.
-2. Select Blank Query as the New Source:
+2. Select Blank Query:
+**Excel Users**
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query%20Excel.png)
+**Power BI Users**
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query.png)
 3. Open the Advanced Query Editor dialog and paste the following code in its entirety:
 ``` javascript
