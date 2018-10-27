@@ -46,7 +46,7 @@ in
 
 ### Download Various Open Data Network Datasets
 
-Return the first 1,000 records from the Seattle Real Time Fire 911 Calls dataset:
+This code snippet returns the first 1,000 records from the Seattle Real Time Fire 911 Calls dataset:
 ``` javascript
 let
     data = ReadSocrata("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
@@ -54,28 +54,30 @@ in
     data
 ```
 
-Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override':
+We can also ask the Socrata API to return a subset, summary, or specific sorting of the data by utilizing its distinctive query language, [Socrata Query Language or SoQL](https://dev.socrata.com/docs/queries/). SoQL clauses act as parameters that define certain criteria by which the dataset provider will filter, summarize, or sort our desired result. 
+
+For example, the following qury returns the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where the physical adress was provided by a person:
 ``` javascript
 let
     data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <APP TOKEN>, 1000000)
 in
     data
 ```
+In the example above, we supplied a SoQL `$where` clause in the URL string that told the dataset provider to filter both the `address_type` and `call_dttm` columns to our defined criteria. We also defined "1000000" as the third parameter in the `ReadSocrata` function, which asked the dataset provider to further limit the results to the first 1M records.
 
-Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token).
+By the way, did you notice the `APP TOKEN` parameter in the function above? Any PowerSocrata query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token). For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
 How do we use the app token? We supply it to our query in one of two ways:
 1. As the second parameter in the `ReadSocrata` function like we did above
-2. Using the `$$app_token` as a parameter as part of our URL
+2. As a `$$app_token` parameter within your request URL string, as shown below
 
-Return the same dataset as above but this time supply the `$$app_token` in the URL:
+In this example, we supply our app token within the SoQL `$$app_token` clause in the URL string. This should return the same dataset as above:
 ``` javascript
 let
     data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
 in
     data
 ```
-For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
 ## Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
