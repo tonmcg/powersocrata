@@ -28,9 +28,9 @@ in
 
 ### Package Features
 
-#### Download Open Data Network Dataset
+#### Download Various Open Data Network Datasets
 
-Return the first 1000 Seattle Fire 911 Calls
+Return the first 1,000 records from the Seattle Real Time Fire 911 Calls dataset:
 ``` javascript
 let
     data = ReadSocrata("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
@@ -38,7 +38,7 @@ in
     data
 ```
 
-Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override'.
+Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override':
 ``` javascript
 let
     data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <APP TOKEN>, 1000000)
@@ -51,6 +51,8 @@ Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000
 How do we use the app token? We supply it to our query in one of two ways:
 1. As the second parameter in the `ReadSocrata` function like we did above
 2. Using the `$$app_token` as a parameter as part of our URL
+
+Return the same dataset as above but this time supply the `$$app_token` in the URL:
 ``` javascript
 let
     data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
