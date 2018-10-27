@@ -70,12 +70,12 @@ By the way, did you notice the `APP TOKEN` parameter in the function above? Any 
 
 How do we use the app token? We supply it to our query in one of two ways:
 1. As the second parameter in the `ReadSocrata` function like we did above
-2. Aa a `$$app_token` parameter within your request URL string, as shown below
+2. As a `$$app_token` parameter within your request URL string, as shown below
 
 In this example, we supply our app token within the SoQL `$$app_token` clause in the URL string. This should return the same dataset as above:
 ``` javascript
 let
-    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
 in
     data
 ```
