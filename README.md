@@ -46,7 +46,7 @@ in
     data
 ```
 
-Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token). For more information on obtaining an app token, read the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page.
+Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token).
 
 How do we use the app token? We supply it to our query in one of two ways:
 1. As the second parameter in the `ReadSocrata` function like we did above
@@ -57,6 +57,7 @@ let
 in
     data
 ```
+For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
 ### Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
