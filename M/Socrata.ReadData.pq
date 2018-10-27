@@ -146,6 +146,17 @@ TODO:
             rowCount,
 
 /*
+Get Metadata
+*/
+    GetMetadata = () as record =>
+        let
+            requestMetadataUrl = Text.Combine({baseUri,"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
+            requestMetadata = Json.Document(Web.Contents(requestMetadataUrl)),
+            datasetMetadata = Record.AddField(Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}), "rowCount", rowCount)
+        in
+            datasetMetadata,
+
+/*
 Get ColumnName and Data Types
 */
     GetColumnDataTypes = (metaRecord as record) as table =>
@@ -162,7 +173,7 @@ Get ColumnName and Data Types
             ReplacedPoint = Table.ReplaceValue(ReplacedCheckbox,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
             SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
             RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
-            TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}})
+            TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}}) meta [point_coordinates = hasPointType, point_column = pointColumn]
         in
             TextToType,
 
@@ -203,7 +214,8 @@ Rebuild URL
         let
             initialQuery = [#"$order" = ":id", #"$limit" = Text.From(page_limit), #"$offset" = Text.From(offset)],
             whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
-            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery
+            token = if hasToken and app_token = null then Record.Field(requestUriParts[query], "$$app_token") else if hasToken and app_token <> null then app_token else null,
+            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", token) else whereQuery
         in
             tokenQuery,
 
@@ -290,7 +302,7 @@ Errors
     // parse URL
     hasURL = if url = null then false else true,
     requestUriParts = if hasURL then GetUriParts(url) else noUrl_error,
-
+    
     // if supplied, validate URL
     isValidURL = if requestUriParts[scheme] <> "https" or Text.Length(requestUriParts[host]) < 1 or Text.Length(requestUriParts[path]) < 1 then url_error else true,
     isValidFourByFour = if not isFourByFour(requestUriParts[fourByfour]) then if Record.FieldOrDefault(requestUriParts, "fourByfour") = "" then noFourByFour_error else badFourByFour_error else true,
@@ -335,26 +347,12 @@ Errors
     numberOfCalls = CalculateNumberOfCalls(rowCount,upper_limit),
 
     // Get metadata
-    requestMetadataUrl = Text.Combine({baseUri,"/api/views.json?method=getDefaultView&id=",requestUriParts[fourByfour]}),
-    requestMetadata = Json.Document(Web.Contents(requestMetadataUrl)),
-    datasetMetadata = Record.AddField(Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}), "rowCount", rowCount),
+    datasetMetadata = GetMetadata(),
 
     // Get column names and data types
     columnFields = GetColumnDataTypes(datasetMetadata),
-    metaRecord = datasetMetadata,
-    columnsMetadataFieldNames = Record.FieldNames(Record.Combine(metaRecord[columns])),
-    columnsMetadataTable = Table.FromList(metaRecord[columns], Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    columnsMetadataExpanded = Table.ExpandRecordColumn(columnsMetadataTable, "Column1", {"fieldName", "dataTypeName"}),
-    hasPointType = List.Contains(columnsMetadataExpanded[dataTypeName], "point"),
-    pointColumn = if hasPointType then columnsMetadataExpanded[fieldName]{List.PositionOf(columnsMetadataExpanded[dataTypeName], "point")} else null,
-    FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
-    ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
-    ReplacedCheckbox = Table.ReplaceValue(ReplacedDateTime,"checkbox","logical",Replacer.ReplaceText,{"dataTypeName"}),
-    ReplacedPoint = Table.ReplaceValue(ReplacedCheckbox,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
-    SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
-    RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
-    TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}}),
-
+    hasPointType = Value.Metadata(columnFields)[point_coordinates],
+    pointColumn = Value.Metadata(columnFields)[point_column],
     columnNames = columnFields[Name],
     columnTypes = CreateColumnTypes(columnFields),
     coordinateTypes = if hasPointType then CreateColumnTypes(Record.ToTable([coordinates.longitude = type number, coordinates.latitude = type number])) else null,
@@ -376,7 +374,7 @@ Errors
     ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, or file format was supplied.",
     tableOfPages = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
     tableOfRecords = Table.ExpandTableColumn(tableOfPages, "Column1", {"Column1"}, {"Column1"}),
-    final = Table.TransformColumnTypes(Table.ExpandRecordColumn(tableOfRecords, "Column1", columnNames), columnTypes),
+    final = Table.TransformColumnTypes(Table.ExpandRecordColumn(tableOfRecords, "Column1", columnNames), columnTypes) meta datasetMetadata,
     coordinateTable = if hasPointType then DefineCoordinateTypes(final, coordinateTypes, pointColumn) else final
 in
     coordinateTable
