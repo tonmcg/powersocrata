@@ -10,20 +10,22 @@ PowerSocrata
 ## Table of Contents
 * [Installing](#installing)
 * [Features](#features)
-    * [Download Datasets](#download-datasets)
+    * [Query Datasets](#query-datasets)
 * [Power BI Report Examples](#power-bi-report-examples)
 * [Power BI Sample Template](#power-bi-sample-template)
 * [Resources](#resources)
 
 ## Installing
 
-1. Launch the Power Query Editor pane.
-2. Select Blank Query:
-**Excel Users**
+1. Create a new Blank Query
+
+**Excel Users:** Data > Get & Transform Data > Get Data > From Other Sources > Blank Query
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query%20Excel.png)
-**Power BI Users**
+
+**Power BI Users:** Home > External Data > Get Data > Blank Query
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query.png)
-3. Open the Advanced Query Editor dialog and paste the following code in its entirety:
+
+2. Open the Advanced Query Editor dialog and paste the following code in its entirety:
 ``` javascript
 let
     Source = 
@@ -40,15 +42,20 @@ in
 ```
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Advanced%20Query%20Editor%20Dialog.png)
 
-4. Click Done.
-5. Power Query will ask you to specify how to connect to this file. Click Edit Credentials.
-6. In the Access Web Content dialog, choose to connect anonymously. Click Connect.
+3. Click Done.
+
+4. Power Query will ask you to specify how to connect to this file. Click Edit Credentials.
+
+5. In the Access Web Content dialog, choose to connect anonymously. Click Connect.
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Access%20Web%20Content%20Dialog.png)
-7. Rename this query to `ReadSocrata`.
+
+6. Rename this query to `ReadSocrata`.
 
 ## Features
 
-### Download Datasets
+### Query Datasets
+
+#### With default parameters
 
 This code snippet returns the first 1,000 records from the San Francisco Police Department Calls for Service dataset:
 ``` javascript
@@ -57,6 +64,8 @@ let
 in
     data
 ```
+
+#### With filter parameters
 
 We can also ask the Socrata API to return a subset, summary, or specific sorting of the data by utilizing its distinctive query language, [Socrata Query Language or SoQL](https://dev.socrata.com/docs/queries/). SoQL clauses are parameters that define the criteria by which the dataset provider will filter, summarize, or sort our desired result. 
 
@@ -68,6 +77,8 @@ in
     data
 ```
 In the example above, we supplied a SoQL `$where` clause within the first parameter of the `ReadSocrata` function, which asked the dataset provider to filter both the `original_crimetype_name` and `call_dttm` columns to our defined criteria. We also defined "100000" as the third parameter in the `ReadSocrata` function, which further limited the results to the first 100K records.
+
+#### With app token parameter
 
 By the way, did you notice the `APP TOKEN` parameter in the function above? Any PowerSocrata query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token). For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
