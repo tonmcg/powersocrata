@@ -58,16 +58,9 @@ Column & Field Names
     
 */
 
-//(url as text, app_token as any, optional limit as number) as table =>
+(url as text, app_token as any, optional limit as number) as table =>
 let
     upper_limit = 50000, // upper limit for any call to the Socrata API
-
-/*
-TESTING ONLY
-*/
-    url = URL,
-    app_token = APP_TOKEN,
-    limit = LIMIT,
 
 /*
 Calculate Number of Times to Call API (Pagination)
