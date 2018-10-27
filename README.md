@@ -11,7 +11,7 @@ PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-
 ### Installation
 
 We name this query "ReadSocrata".
-```
+``` javascript
 let
     Source = 
         Expression.Evaluate(
@@ -31,27 +31,29 @@ in
 #### Download Open Data Network Dataset
 
 Return the first 1000 Seattle Fire 911 Calls
-
-```
+``` javascript
 let
     data = ReadSocrata("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
 in
     data
 ```
 
-Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override'. Note: Any query that returns more than 1,000 records requires the use of a Socrata Open Data API *application token* (app_token). For more information on obtaining and using an app_token, review the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) documentation page.
-
-```
+Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override'.
+``` javascript
 let
-    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <YOUR APP TOKEN>, 1000000)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <APP TOKEN>, 1000000)
 in
     data
 ```
 
-Alternatively, we can supply the `$$app_token` as a parameter in our request.
-```
+Did you notice the `APP TOKEN` parameter? Any query that returns more than 1,000 records requires the use of a unique Socrata Open Data API *application token* (app token). For more information on obtaining an app token, read the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page.
+
+How do we use the app token? We supply it to our query in one of two ways:
+1. As the second parameter in the `ReadSocrata` function like we did above
+2. Using the `$$app_token` as a parameter as part of our URL
+``` javascript
 let
-    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<YOUR APP TOKEN>", null, 1000000)
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<APP TOKEN>", null, 1000000)
 in
     data
 ```
