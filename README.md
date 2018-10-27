@@ -9,6 +9,8 @@ PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
 ### Installation
+
+We name this query "ReadSocrata".
 ```
 let
     Source = 
@@ -24,10 +26,32 @@ in
     Source
 ```
 
-### Examples
+### Package Features
+
+#### Download Open Data Network Dataset
+
+Return the first 1000 Seattle Fire 911 Calls
+
+```
+let
+    Source = 
+        Expression.Evaluate(
+            Text.FromBinary(
+                Web.Contents(
+                    "https://raw.githubusercontent.com/tonmcg/powersocrata/master/M/Socrata.ReadData.pq"
+                )
+            ),
+            #shared
+        ),
+    data = Source("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
+in
+    data
+```
+
+### Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
-### Sample Template
+### Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
 
 ## Additional Links and Resources
