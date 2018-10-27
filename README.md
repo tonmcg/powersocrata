@@ -1,21 +1,21 @@
 PowerSocrata
 ==============
 
-## Overview
-PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
+**PowerSocrata** enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/). With **PowerSocrata**, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
 
-PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. PowerSocrata aims to provide the same SoDA functionality found in popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M language is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
+**PowerSocrata** is a series of [M language](https://docs.microsoft.com/en-us/power-query/) functions that provide a way for Power BI Desktop and Excel 2016 users to easily access, analyze, and visualize these open data resources. **PowerSocrata** aims to provide the same SoDA functionality found in some of the more popular programming languages<sup id="a1">[[1]](#f1)</sup><sup id="a2">[[2]](#f2)</sup><sup id="a3">[[3]](#f3)</sup>. The M language is used by the Power Query user experience found in Power BI Desktop and Excel 2016.
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
-* [Installation](#installation)
-* [Package Features](#package-features)
+## Table of Contents
+* [Installing](#installing)
+* [Features](#features)
     * [Download Datasets](#download-datasets)
 * [Power BI Report Examples](#power-bi-report-examples)
 * [Power BI Sample Template](#power-bi-sample-template)
-* [Additional Links and Resources](#additional-links-and-resources)
+* [Resources](#resources)
 
-## Installation
+## Installing
 1. Launch the Power Query Editor pane.
 2. Select Blank Query as the New Source:
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query.png)
@@ -42,7 +42,7 @@ in
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Access%20Web%20Content%20Dialog.png)
 7. Rename this query to `ReadSocrata`.
 
-## Package Features
+## Features
 
 ### Download Datasets
 
@@ -85,7 +85,7 @@ in
 ## Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
 
-## Additional Links and Resources
+## Resources
 + [Open Data Network](https://www.opendatanetwork.com/)
 + [Socrata Open Data API Developer Documentation](https://dev.socrata.com/)
 + [Power Query M Documentation](https://docs.microsoft.com/en-us/power-query/)
