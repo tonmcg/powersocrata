@@ -34,16 +34,24 @@ Return the first 1000 Seattle Fire 911 Calls
 
 ```
 let
-    Source = 
-        Expression.Evaluate(
-            Text.FromBinary(
-                Web.Contents(
-                    "https://raw.githubusercontent.com/tonmcg/powersocrata/master/M/Socrata.ReadData.pq"
-                )
-            ),
-            #shared
-        ),
-    data = Source("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
+    data = ReadSocrata("https://data.seattle.gov/resource/grwu-wqtk.json", null, null)
+in
+    data
+```
+
+Return the first 1M calls since 2017 from the San Francisco Police Department Calls for Service where `address_type` does not equal 'Geo-Override'. Note: Any query that returns more than 1,000 records requires the use of a Socrata Open Data API *application token* (app_token). For more information on obtaining and using an app_token, review the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) documentation page.
+
+```
+let
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'", <YOUR APP TOKEN>, 1000000)
+in
+    data
+```
+
+Alternatively, we can supply the `$$app_token` as a parameter in our request.
+```
+let
+    data = ReadSocrata("https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+call_dttm>'2017-01-01T00:00:00.000'&$$app_token=<YOUR APP TOKEN>", null, 1000000)
 in
     data
 ```
