@@ -151,15 +151,18 @@ Get ColumnName and Data Types
     GetColumnDataTypes = (metaRecord as record) as table =>
         let
             columnsMetadata = metaRecord[columns],
-            columnsMetadataFieldNames = Record.FieldNames(Record.Combine(columnsMetadata)),
-            columnsMetadataTable = Table.FromList(columnsMetadata, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+            columnsMetadataFieldNames = Record.FieldNames(Record.Combine(metaRecord[columns])),
+            columnsMetadataTable = Table.FromList(metaRecord[columns], Splitter.SplitByNothing(), null, null, ExtraValues.Error),
             columnsMetadataExpanded = Table.ExpandRecordColumn(columnsMetadataTable, "Column1", {"fieldName", "dataTypeName"}),
+            hasPointType = List.Contains(columnsMetadataExpanded[dataTypeName], "point"),
+            pointColumn = if hasPointType then columnsMetadataExpanded[fieldName]{List.PositionOf(columnsMetadataExpanded[dataTypeName], "point")} else null,
             FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
             ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
-            ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
+            ReplacedCheckbox = Table.ReplaceValue(ReplacedDateTime,"checkbox","logical",Replacer.ReplaceText,{"dataTypeName"}),
+            ReplacedPoint = Table.ReplaceValue(ReplacedCheckbox,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
             SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
-            RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Type"}}),
-            TextToType = Table.TransformColumns(RenamedFields,{{"Type", Expression.Evaluate}})
+            RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
+            TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}})
         in
             TextToType,
 
@@ -337,7 +340,7 @@ Errors
     datasetMetadata = Record.AddField(Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}), "rowCount", rowCount),
 
     // Get column names and data types
-    // columnFields = GetColumnDataTypes(datasetMetadata),
+    columnFields = GetColumnDataTypes(datasetMetadata),
     metaRecord = datasetMetadata,
     columnsMetadataFieldNames = Record.FieldNames(Record.Combine(metaRecord[columns])),
     columnsMetadataTable = Table.FromList(metaRecord[columns], Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -346,11 +349,11 @@ Errors
     pointColumn = if hasPointType then columnsMetadataExpanded[fieldName]{List.PositionOf(columnsMetadataExpanded[dataTypeName], "point")} else null,
     FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
     ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
-    ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","any",Replacer.ReplaceText,{"dataTypeName"}) meta [point_type = hasPointType, point_column = pointColumn],
+    ReplacedCheckbox = Table.ReplaceValue(ReplacedDateTime,"checkbox","logical",Replacer.ReplaceText,{"dataTypeName"}),
+    ReplacedPoint = Table.ReplaceValue(ReplacedCheckbox,"point","any",Replacer.ReplaceText,{"dataTypeName"}),
     SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
     RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
     TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}}),
-    columnFields = TextToType,
 
     columnNames = columnFields[Name],
     columnTypes = CreateColumnTypes(columnFields),
