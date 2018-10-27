@@ -4,9 +4,9 @@ PowerSocrata
 * [Overview](#overview)
 * [Installation](#installation)
 * [Package Features](#package-features)
-* [Power BI Report Examples](#report-examples)
-* [Power BI Sample Template](#sample-template)
-* [Additional Links and Resources](#additional-links-resources)
+* [Power BI Report Examples](#power-bi-report-examples)
+* [Power BI Sample Template](#power-bi-sample-template)
+* [Additional Links and Resources](#additional-links-and-resources)
 
 ## Overview
 PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
