@@ -1,6 +1,14 @@
 PowerSocrata
 ==============
 
++ [Overview](#overview)
++ [Installation](#installation)
++ [Package Features](#package-features)
++ [Power BI Report Examples](#report-examples)
++ [Power BI Sample Template](#sample-template)
++ [Additional Links and Resources](#additional-links-resources)
+
+<a name="overview" />
 ## Overview
 PowerSocrata enables users to connect to and access data from the Socrata open data portals, including the [Socrata Open Data API (SoDA)](https://dev.socrata.com/) and the Socrata "human-friendly" URLs. With SoDA, users can programmatically access a wealth of open data resources from governments, non-profits, and NGOs around the world.
 
@@ -8,9 +16,12 @@ PowerSocrata is a series of [M language](https://docs.microsoft.com/en-us/power-
 
 ![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Baltimore%20City%20911%20Fast.gif)
 
-### Installation
-
-We name this query "ReadSocrata".
+<a name="installation" />
+## Installation
+1. Launch the Power Query Editor pane.
+2. Select Blank Query as the New Source:
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Create%20Blank%20Query.png)
+3. Open the Advanced Query Editor dialog and paste the following code in its entirety:
 ``` javascript
 let
     Source = 
@@ -25,10 +36,18 @@ let
 in
     Source
 ```
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Advanced%20Query%20Editor%20Dialog.png)
 
-### Package Features
+4. Click Done.
+5. Power Query will ask you to specify how to connect to this file. Click Edit Credentials.
+6. In the Access Web Content dialog, choose to connect anonymously. Click Connect.
+![Alt Text](https://github.com/tonmcg/powersocrata/blob/master/assets/Access%20Web%20Content%20Dialog.png)
+7. Rename this query to `ReadSocrata`.
 
-#### Download Various Open Data Network Datasets
+<a name="package-features" />
+## Package Features
+
+### Download Various Open Data Network Datasets
 
 Return the first 1,000 records from the Seattle Real Time Fire 911 Calls dataset:
 ``` javascript
@@ -61,14 +80,16 @@ in
 ```
 For more information on obtaining an app token, consult the [Application Tokens](https://dev.socrata.com/docs/app-tokens.html) page on the Socrata API Developer site.
 
-### Power BI Report Examples
+<a name="report-examples" />
+## Power BI Report Examples
 + [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
-### Power BI Sample Template
+<a name="sample-template" />
+## Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
 
+<a name="additional-links-resources" />
 ## Additional Links and Resources
-
 + [Open Data Network](https://www.opendatanetwork.com/)
 + [Socrata Open Data API Developer Documentation](https://dev.socrata.com/)
 + [Power Query M Documentation](https://docs.microsoft.com/en-us/power-query/)
