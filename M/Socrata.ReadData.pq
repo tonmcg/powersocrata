@@ -58,9 +58,16 @@ Column & Field Names
     
 */
 
-(url as text, app_token as any, optional limit as number) as table =>
+//(url as text, app_token as any, optional limit as number) as table =>
 let
     upper_limit = 50000, // upper limit for any call to the Socrata API
+
+/*
+TESTING ONLY
+*/
+    url = URL,
+    app_token = APP_TOKEN,
+    limit = LIMIT,
 
 /*
 Calculate Number of Times to Call API (Pagination)
@@ -85,17 +92,6 @@ Convert Query to String
             queryRecord = Text.Replace(Text.Replace(Text.Replace(Uri.BuildQueryString(query), "%24", "$"), "%2B", "+"), "%2A", "*")
         in
             queryRecord,
-
-/*
-Rebuild URL
-*/
-    CreateQuery = (offset  as number, page_limit as number) as record =>
-        let
-            initialQuery = [#"$order" = ":id", #"$limit" = Text.From(page_limit), #"$offset" = Text.From(offset)],
-            whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
-            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery
-        in
-            tokenQuery,
 
 /*
 Validate FourByFour
@@ -190,31 +186,30 @@ Parse Url
             uriRecord,
 
 /*
-Paginate Over Multiple Responses
-*/
-    GetAllPages = (n as number, offset as number) as table =>
-        let
-            beg_balance = rowCount - n * upper_limit,
-            page_limit = if beg_balance > upper_limit then upper_limit else beg_balance,
-            end_balance = beg_balance - page_limit,
-            query = CreateQuery(offset, page_limit),
-            data = GetPage(query)
-       in
-            data,
-
-/*
 Process Response
 */
     ProcessResults = (response as binary) as table =>
         let
             body = Json.Document(response),
-            data = Table.FromRecords(body),
+            recordTable = Table.FromList(body, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+            data = Table.ExpandRecordColumn(recordTable, "Column1", columnNames),
             responseColumns = Table.ColumnNames(data),
             matchedColumns = List.Intersect({columnNames, responseColumns}),
             responseTypes = List.Select(columnTypes, (r) =>  List.Contains(matchedColumns, r{0})),
             final = Table.TransformColumnTypes(data,responseTypes)
         in
-            final,
+            data,
+
+/*
+Rebuild URL
+*/
+    CreateQuery = (offset  as number, page_limit as number) as record =>
+        let
+            initialQuery = [#"$order" = ":id", #"$limit" = Text.From(page_limit), #"$offset" = Text.From(offset)],
+            whereQuery = if hasWhereClause then Record.AddField(initialQuery, "$where", whereClause) else initialQuery,
+            tokenQuery = if hasToken then Record.AddField(whereQuery, "$$app_token", app_token) else whereQuery
+        in
+            tokenQuery,
 
 /*
 General http Request
@@ -229,12 +224,27 @@ General http Request
                     Query = query
                 ]
             ),
-            response_status = Value.Metadata(response)[Response.Status]
+            response_status = Value.Metadata(response)[Response.Status],
+            body = Json.Document(response)
         in
             if response_status <> 200 then
                 Table.FromRows({})
             else
-                ProcessResults(response),
+                Table.FromList(body, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+                //ProcessResults(response),
+
+/*
+Paginate Over Multiple Responses
+*/
+    GetAllPages = (n as number, offset as number) as table =>
+        let
+            beg_balance = rowCount - n * upper_limit,
+            page_limit = if beg_balance > upper_limit then upper_limit else beg_balance,
+            end_balance = beg_balance - page_limit,
+            query = CreateQuery(offset, page_limit),
+            data = GetPage(query)
+       in
+            data,
 
 /*
 Check $$app_token
@@ -247,6 +257,29 @@ Check $$app_token
             isNotMissing = List.Contains({isInUrl,isNotNull,isNotEmpty},true)
         in
             isNotMissing,
+
+/*
+Create Column Types
+*/
+    CreateColumnTypes = (columnFields as table) =>
+        let
+            fieldValues = Table.AddColumn(columnFields, "Custom", each Record.FieldValues(_)),
+            columnTypes = Table.RemoveColumns(fieldValues,{"Name", "Value"})[Custom]
+        in
+            columnTypes,
+
+/*
+Define Coordinate Types
+*/
+    DefineCoordinateTypes = (coordinateTable as table, coordinateTypes as list, pointColumn as text) as table =>
+        let
+            FilteredCoordinates = Table.SelectRows(coordinateTable, each ([location] <> null)),
+            ExpandedPointColumn = Table.ExpandRecordColumn(FilteredCoordinates, pointColumn, {"coordinates"}),
+            ExtractedCoordinates = Table.TransformColumns(ExpandedPointColumn, {"coordinates", each Text.Combine(List.Transform(_, Text.From), ";"), type text}),
+            SplitCoordinates = Table.SplitColumn(ExtractedCoordinates, "coordinates", Splitter.SplitTextByDelimiter(";", QuoteStyle.Csv), {"coordinates.longitude", "coordinates.latitude"}),
+            coordinates = Table.TransformColumnTypes(SplitCoordinates, coordinateTypes)
+        in
+            coordinates,
 
 /*
 Errors
@@ -311,10 +344,24 @@ Errors
     datasetMetadata = Record.AddField(Record.SelectFields(requestMetadata, {"name", "description", "createdAt", "rowsUpdatedAt", "columns"}), "rowCount", rowCount),
 
     // Get column names and data types
-    columnFields = GetColumnDataTypes(datasetMetadata),
+    // columnFields = GetColumnDataTypes(datasetMetadata),
+    metaRecord = datasetMetadata,
+    columnsMetadataFieldNames = Record.FieldNames(Record.Combine(metaRecord[columns])),
+    columnsMetadataTable = Table.FromList(metaRecord[columns], Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    columnsMetadataExpanded = Table.ExpandRecordColumn(columnsMetadataTable, "Column1", {"fieldName", "dataTypeName"}),
+    hasPointType = List.Contains(columnsMetadataExpanded[dataTypeName], "point"),
+    pointColumn = if hasPointType then columnsMetadataExpanded[fieldName]{List.PositionOf(columnsMetadataExpanded[dataTypeName], "point")} else null,
+    FilteredcolumnsMetadataExpanded = Table.SelectRows(columnsMetadataExpanded, each not Text.StartsWith([fieldName], ":")),
+    ReplacedDateTime = Table.ReplaceValue(FilteredcolumnsMetadataExpanded,"calendar_date","datetime",Replacer.ReplaceText,{"dataTypeName"}),
+    ReplacedPoint = Table.ReplaceValue(ReplacedDateTime,"point","any",Replacer.ReplaceText,{"dataTypeName"}) meta [point_type = hasPointType, point_column = pointColumn],
+    SetTypes = Table.TransformColumns(ReplacedPoint, {{"dataTypeName", each "type " & _, type text}}),
+    RenamedFields = Table.RenameColumns(SetTypes,{{"fieldName", "Name"}, {"dataTypeName", "Value"}}),
+    TextToType = Table.TransformColumns(RenamedFields,{{"Value", Expression.Evaluate}}),
+    columnFields = TextToType,
+
     columnNames = columnFields[Name],
-    FieldValues = Table.AddColumn(columnFields, "Custom", each Record.FieldValues(_)),
-    columnTypes = Table.RemoveColumns(FieldValues,{"Name", "Type"})[Custom],
+    columnTypes = CreateColumnTypes(columnFields),
+    coordinateTypes = if hasPointType then CreateColumnTypes(Record.ToTable([coordinates.longitude = type number, coordinates.latitude = type number])) else null,
 
     // Get data
     requestData = if not List.Contains({isValidURL,isValidFourByFour,isValidFileFormat},false) then List.Generate(
@@ -332,7 +379,8 @@ Errors
         each [data]
     ) else error "This operation cannot be completed. Either an invalid URL, dataset identifier, or file format was supplied.",
     tableOfPages = Table.FromList(requestData, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-    firstRow = tableOfPages{0}?,
-    final = Table.TransformColumnTypes(Table.ExpandTableColumn(tableOfPages, "Column1", columnNames), columnTypes)
+    tableOfRecords = Table.ExpandTableColumn(tableOfPages, "Column1", {"Column1"}, {"Column1"}),
+    final = Table.TransformColumnTypes(Table.ExpandRecordColumn(tableOfRecords, "Column1", columnNames), columnTypes),
+    coordinateTable = if hasPointType then DefineCoordinateTypes(final, coordinateTypes, pointColumn) else final
 in
-    final
+    coordinateTable
