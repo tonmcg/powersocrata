@@ -38,13 +38,15 @@ resource location:
 https://data.sfgov.org/resource/fjjd-jecq.json
 
 sample where clause:
-address_type<>'Geo-Override'+AND+original_crimetype_name='Homeless+Complaint'
+original_crimetype_name='Homeless+Complaint'
 
 sample datetime where clause:
-call_dttm>'2017-01-01T00:00:00.000'
+call_dttm>'2016-01-01T00:00:00.000'
 
 sample count:
-https://data.sfgov.org/resource/fjjd-jecq.json?$where=address_type<>'Geo-Override'+AND+original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2017-01-01T00:00:00.000'&$select=count(*)+AS+count
+https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'&$select=count(*)+AS+count
+
+original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'
 
 
 ************************************************************************************************************
