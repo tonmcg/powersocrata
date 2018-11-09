@@ -65,7 +65,7 @@ let
 /*
 TESTING ONLY
 */
-    url = "https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'&$$app_token=dKUISojglB5gUYergyvSp0aSd",
+    url = "https://data.sfgov.org/resource/fjjd-jecq.json?$where=original_crimetype_name='Homeless+Complaint'+AND+call_dttm>'2016-01-01T00:00:00.000'",
     app_token = null,
     limit = null,
 
