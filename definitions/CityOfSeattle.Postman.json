@@ -1,0 +1,67 @@
+{
+	"id": "56f1f023-7c7c-44bc-8b6c-f2486f379baa",
+	"name": "City of Seattle",
+	"description": "",
+	"auth": null,
+	"events": null,
+	"variables": [],
+	"order": [],
+	"folders_order": [
+		"6f84d502-ee9a-4710-acd6-f3bfa83e72ab"
+	],
+	"folders": [
+		{
+			"id": "6f84d502-ee9a-4710-acd6-f3bfa83e72ab",
+			"name": "Datasets",
+			"description": "",
+			"auth": null,
+			"events": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "007b8e5b-0454-4bc7-bd99-c51bee292547",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "0ec01db0-b44e-4b3d-949d-f053363dd5b3",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"collection": "56f1f023-7c7c-44bc-8b6c-f2486f379baa",
+			"folder": null,
+			"order": [
+				"93c968d3-e23d-497a-a4f9-7bbed2b695ba"
+			],
+			"folders_order": []
+		}
+	],
+	"requests": [
+		{
+			"id": "93c968d3-e23d-497a-a4f9-7bbed2b695ba",
+			"name": "Get Datasets",
+			"url": "https://data.seattle.gov/api/odata/v4/",
+			"description": null,
+			"data": null,
+			"dataMode": null,
+			"headerData": [],
+			"method": "GET",
+			"pathVariableData": [],
+			"queryParams": [],
+			"auth": null,
+			"events": null,
+			"folder": "6f84d502-ee9a-4710-acd6-f3bfa83e72ab",
+			"headers": "",
+			"pathVariables": {}
+		}
+	]
+}

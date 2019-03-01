@@ -1,0 +1,359 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0",
+    "title": "Socrata Open Data Network Discovery API",
+    "description": "This swagger specification defines and describes the endpoints of the Socarata Discovery API",
+    "contact": {
+      "name": "Tony McGovern",
+      "url": "http://tonymcgovern.com",
+      "email": "tony@emdata.ai"
+    }
+  },
+  "host": "api.us.socrata.com",
+  "basePath": "/api/catalog",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/domains": {
+      "get": {
+        "description": "Returns each domain and the count of assets owned by that domain. The counts may be restricted according to any of the query parameters described in the Complete Search API, with the exception of the q text search param.",
+        "summary": "Count assets by domain",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "CountByDomain",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    },
+    "/v1/domain_tags": {
+      "get": {
+        "description": "Returns each domain-specific tag and the count of assets having that tag. The counts may be restricted according to any of the query parameters described in the Complete Search API.",
+        "summary": "Count assets by tag",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "CountByTag",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of results to return",
+            "x-ms-visibility": "advanced"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    },
+    "/v1/domain_categories": {
+      "get": {
+        "description": "Returns each domain-specific category and the count of assets having that category. The counts may be restricted according to any of the query parameters described in the Complete Search API.",
+        "summary": "Count assets by category",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "CountByCategory",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of results to return",
+            "x-ms-visibility": "advanced"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    },
+    "/v1/domains/{search_context}/facets": {
+      "get": {
+        "description": "Returns each domain-specific category and the count of assets having that category. The counts may be restricted according to any of the query parameters described in the Complete Search API.",
+        "summary": "Count assets by facets",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "CountByFacets",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "search_context",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Each asset is owned by a single domain. The `domain` and `search_context` parameters will the results to those from the given domains. If you seek to limit query results to a singular domains, please provide the same name in both domains and `search_context`. If you wish to search data across multiple domains, please provide all domains in the `domains` parameter. If you furthermore wish to see that data through the eyes of a given domain, e.g. filter by their approval requiements and search across their tags/categories/custom metadata, give this name in the `search_context`. (Neither of these parameters support repeated usage).",
+            "x-ms-visibility": "important"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    },
+    "/v1": {
+      "get": {
+        "description": "This is the main operation for the Socrata Discovery API. It allows you to access and explore all public metadata published on the Socrata platform.",
+        "summary": "List all assets",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "GetAssets",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of results to return",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset is uniquely identified by a string of 9 characters. This string is a sequence of 4 alphanumeric characters, a dash, then 4 more alphanumeric characters. The `ids` parameter will limit the results to the assets identified by the given ids.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "domains",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset is owned by a single domain. The `domain` and `search_context` parameters will the results to those from the given domains. If you seek to limit query results to a singular domains, please provide the same name in both domains and `search_context`. If you wish to search data across multiple domains, please provide all domains in the `domains` parameter. If you furthermore wish to see that data through the eyes of a given domain, e.g. filter by their approval requiements and search across their tags/categories/custom metadata, give this name in the `search_context`. (Neither of these parameters support repeated usage).",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "search_context",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset is owned by a single domain. The `domain` and `search_context` parameters will the results to those from the given domains. If you seek to limit query results to a singular domains, please provide the same name in both domains and `search_context`. If you wish to search data across multiple domains, please provide all domains in the `domains` parameter. If you furthermore wish to see that data through the eyes of a given domain, e.g. filter by their approval requiements and search across their tags/categories/custom metadata, give this name in the `search_context`. (Neither of these parameters support repeated usage).",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "categories",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset may have categories/tags assigned by Socrata or by the owning domain. The `categories` and `tags` parameters will limit the results to those having the given category or tag. To search the categories/tags of a particular domain, you must also include the `search_context` param. To search the categories/tags that were assigned by Socrata, exclude the `search_context` param.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset may have categories/tags assigned by Socrata or by the owning domain. The `categories` and `tags` parameters will limit the results to those having the given category or tag. To search the categories/tags of a particular domain, you must also include the `search_context` param. To search the categories/tags that were assigned by Socrata, exclude the `search_context` param.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "min_should_match",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "only",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset has a logical type, such as a dataset or chart. The `only` parameter will limit the results to a particular type. The current taxonomy includes the following types:\n\n*api*, *calendar*, *chart*, *datalens*, *dataset*, *federated_href*, *file*, *filter*, *form*, *href*, *link*, *map*, *measure*, *story*, *visualization*\n\nYou may use either the singular or plural variants of each type.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "attribution",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Assets can be attributed to various organizations. The `attribution` parameter will limit the results to those attributed to the given organization.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "license",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Assets can be released under various licenses. The `license` parameter will limit the results to those with the given license.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "derived_from",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Some assets are uploaded directly and others are created from already existing data. For example, charts are derived from an existing parent dataset. The `derived_from` parameter will limit the results to those that derive from the given dataset.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "provenance",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "While many assets on Socrata are owned by government data publishers and other staff, some visualizations, maps, filtered views, and more are created by a member of the community. These assets are usually denoted with a 'Community' badge on the data catalog. A `provenance=official` parameter will limit the results to official assets, i.e. those owned by roled users on the domain; a `provenance=community` parameter will limit the results to community created assets.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "for_user",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Each asset has an owner. The `for_user` parameter will limit the results to those owned by the given user.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "column_names",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Tabular assets are composed of rows and columns. The `column_names` parameter will limit the results to those having the given column names.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "The results of all the above filters can be sorted by any of the attributes in the list below. If not specified, the results are sorted by relevance. All sort values can optionally append a space and either 'ASC' or 'DESC' for ascending or descending sorts, but note that the space must be URL-escaped with '+' or '%20'. The default for each attribute is given in the table.\n\nIt is possible for search results to have missing values for some of these sort fields (such as 'domain_category', for example). Any assets missing a value altogether for the field being sorted on will show up at the end of the results list.\nAttribute \tDefault Sort Order\nrelevance (default) \tdescending\nname \tascending\nowner \tascending\ndataset_id \tascending\ndatatype \tascending\ndomain_category \tascending\ncreatedAt \tdescending\nupdatedAt \tdescending\npage_views_total \tdescending\npage_views_last_month \tdescending\npage_views_last_week \tdescending",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "derived",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Some assets are uploaded directly and others are created from already existing data. For example, charts are derived from an existing parent dataset. The `derived` parameter will limit the results to one or other of these classes of data. A 'true' value finds derived assets and a 'false' value finds base assets.",
+            "x-ms-visibility": "advanced"
+          },
+          {
+            "name": "boostOfficial",
+            "in": "query",
+            "required": false,
+            "type": "number",
+            "format": "double",
+            "description": "It is possible to adjust the rankings of official assets to promote them above community-created content. This leverages the weight function of [function score queries](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-function-score-query.html#function-weight) in Elasticsearch. This weight acts as a multiplier for the relevance score of each official document. Thus, a number between 0 and 1 will demote official assets, while any number greater than 1 will boost them.",
+            "x-ms-visibility": "advanced"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    },
+    "/v1/autocomplete": {
+      "get": {
+        "description": "To improve the catalog search experience, we added an autocomplete API, which returns a list of titles that match the search query. This API supports all the same filtering parameters as the top-level complete search API. The response body has the same shape as the search API, containing 'resultSetSize', 'results', and 'timings' fields at the root of the response object. The 'results' differ however as an array of objects with the following two fields:\nField \tDescription\ntitle \tthe raw title matching the given query\ndisplay_title \tan html marked up variant of the raw title that provides highlighting\n\nNote that while this API mirrors the top-level search API, the behavior of the `q` parameter is slightly different in this case. Just as with the full search endpoint, it takes arbitrary text. However, the autocomplete search is restricted to the 'name' field of the asset (i.e. the asset title).",
+        "summary": "Autocomplete asset names",
+        "tags": [
+          "Discovery API"
+        ],
+        "operationId": "AutocompleteNames",
+        "deprecated": false,
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match.",
+            "x-ms-visibility": "important"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of results to return",
+            "x-ms-visibility": "advanced"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your request was successful"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {},
+  "parameters": {},
+  "responses": {},
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "X-App-Token",
+      "x-ms-client-name": "App Token"
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Discovery API",
+      "description": "The Socrata data platform hosts tens of thousands of government datasets. Governments large and small publish data on crime, permits, finance, healthcare, research, performance, and more for citizens to use. While this large corpus of government data is already accessible via opendatanetwork.com, this API opens up the Socrata corpus of government data for automated searching, research, and exploration. Datasets can be found by keywords, high-level categorizations, tags, and much more. This API, then, is a powerful way to access and explore all public metadata published on the Socrata platform."
+    }
+  ]
+}

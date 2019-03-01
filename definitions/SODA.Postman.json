@@ -1,0 +1,470 @@
+{
+	"info": {
+		"_postman_id": "b7320ffd-8aa0-4a7c-b489-6f1d76471e22",
+		"name": "Socrata Open Data Network",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Discovery API",
+			"item": [
+				{
+					"name": "Count assets by domain",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-App-Token",
+								"value": "{{app-token}}",
+								"description": "All calls should include a valid Socrata app token via the X-App-Token header. Use an app token so the API server can throttle by application, rather than via IP address, thus granting higher throttling limits.",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1/domains",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1",
+								"domains"
+							]
+						},
+						"description": "Returns each domain and the count of assets owned by that domain. The counts may be restricted according to any of the query parameters described in the Complete Search API, with the exception of the q text search param."
+					},
+					"response": []
+				},
+				{
+					"name": "Count assets by tag",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-App-Token",
+								"value": "{{app-token}}",
+								"description": "Use an application token so the API server can throttle by application, rather than via IP address, which grants higher throttling limits",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1/domain_tags?limit=1000",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1",
+								"domain_tags"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						},
+						"description": "Returns each domain-specific tag and the count of assets having that tag. The counts may be restricted according to any of the query parameters described in the Complete Search API."
+					},
+					"response": []
+				},
+				{
+					"name": "Count assets by category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-App-Token",
+								"value": "{{app-token}}",
+								"description": "Use an application token so the API server can throttle by application, rather than via IP address, which grants higher throttling limits",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1/domain_categories?limit=500",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1",
+								"domain_categories"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "500"
+								}
+							]
+						},
+						"description": "Returns each domain-specific category and the count of assets having that category. The counts may be restricted according to any of the query parameters described in the Complete Search API."
+					},
+					"response": []
+				},
+				{
+					"name": "Count assets by facets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-App-Token",
+								"value": "{{app-token}}",
+								"description": "Use an application token so the API server can throttle by application, rather than via IP address, which grants higher throttling limits",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1/domains/{{search_context}}/facets",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1",
+								"domains",
+								"{{search_context}}",
+								"facets"
+							]
+						},
+						"description": "Returns each domain-specific category and the count of assets having that category. The counts may be restricted according to any of the query parameters described in the Complete Search API."
+					},
+					"response": []
+				},
+				{
+					"name": "List all assets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-App-Token",
+								"value": "{{app-token}}",
+								"description": "Use an application token so the API server can throttle by application, rather than via IP address, which grants higher throttling limits",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1?ids={{ids}}&domains={{domains}}&search_context={{search_context}}&categories={{categories}}&tags={{tags}}&q={{q}}&min_should_match={{min_should_match}}&only={{only}}&attribution={{attribution}}&license={{license}}&derived_from={{derived_from}}&provenance={{provenance}}&for_user={{for_user}}&column_names={{column_names}}&order={{order}}&derived={{derived}}&boostOfficial={{boostOfficial}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1"
+							],
+							"query": [
+								{
+									"key": "ids",
+									"value": "{{ids}}",
+									"description": "Each asset is uniquely identified by a string of 9 characters. This string is a sequence of 4 alphanumeric characters, a dash, then 4 more alphanumeric characters. The `ids` parameter will limit the results to the assets identified by the given ids."
+								},
+								{
+									"key": "domains",
+									"value": "{{domains}}",
+									"description": "Each asset is owned by a single domain. The `domain` and `search_context` parameters will the results to those from the given domains. If you seek to limit query results to a singular domains, please provide the same name in both domains and `search_context`. If you wish to search data across multiple domains, please provide all domains in the `domains` parameter. If you furthermore wish to see that data through the eyes of a given domain, e.g. filter by their approval requiements and search across their tags/categories/custom metadata, give this name in the `search_context`. (Neither of these parameters support repeated usage)."
+								},
+								{
+									"key": "search_context",
+									"value": "{{search_context}}",
+									"description": "Each asset is owned by a single domain. The `domain` and `search_context` parameters will the results to those from the given domains. If you seek to limit query results to a singular domains, please provide the same name in both domains and `search_context`. If you wish to search data across multiple domains, please provide all domains in the `domains` parameter. If you furthermore wish to see that data through the eyes of a given domain, e.g. filter by their approval requiements and search across their tags/categories/custom metadata, give this name in the `search_context`. (Neither of these parameters support repeated usage)."
+								},
+								{
+									"key": "categories",
+									"value": "{{categories}}",
+									"description": "Each asset may have categories/tags assigned by Socrata or by the owning domain. The `categories` and `tags` parameters will limit the results to those having the given category or tag. To search the categories/tags of a particular domain, you must also include the `search_context` param. To search the categories/tags that were assigned by Socrata, exclude the `search_context` param."
+								},
+								{
+									"key": "tags",
+									"value": "{{tags}}",
+									"description": "Each asset may have categories/tags assigned by Socrata or by the owning domain. The `categories` and `tags` parameters will limit the results to those having the given category or tag. To search the categories/tags of a particular domain, you must also include the `search_context` param. To search the categories/tags that were assigned by Socrata, exclude the `search_context` param."
+								},
+								{
+									"key": "q",
+									"value": "{{q}}",
+									"description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match."
+								},
+								{
+									"key": "min_should_match",
+									"value": "{{min_should_match}}",
+									"description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match."
+								},
+								{
+									"key": "only",
+									"value": "{{only}}",
+									"description": "Each asset has a logical type, such as a dataset or chart. The `only` parameter will limit the results to a particular type. The current taxonomy includes the following types:\n\n*api*, *calendar*, *chart*, *datalens*, *dataset*, *federated_href*, *file*, *filter*, *form*, *href*, *link*, *map*, *measure*, *story*, *visualization*\n\nYou may use either the singular or plural variants of each type."
+								},
+								{
+									"key": "attribution",
+									"value": "{{attribution}}",
+									"description": "Assets can be attributed to various organizations. The `attribution` parameter will limit the results to those attributed to the given organization."
+								},
+								{
+									"key": "license",
+									"value": "{{license}}",
+									"description": "Assets can be released under various licenses. The `license` parameter will limit the results to those with the given license."
+								},
+								{
+									"key": "derived_from",
+									"value": "{{derived_from}}",
+									"description": "Some assets are uploaded directly and others are created from already existing data. For example, charts are derived from an existing parent dataset. The `derived_from` parameter will limit the results to those that derive from the given dataset."
+								},
+								{
+									"key": "provenance",
+									"value": "{{provenance}}",
+									"description": "While many assets on Socrata are owned by government data publishers and other staff, some visualizations, maps, filtered views, and more are created by a member of the community. These assets are usually denoted with a 'Community' badge on the data catalog. A `provenance=official` parameter will limit the results to official assets, i.e. those owned by roled users on the domain; a `provenance=community` parameter will limit the results to community created assets."
+								},
+								{
+									"key": "for_user",
+									"value": "{{for_user}}",
+									"description": "Each asset has an owner. The `for_user` parameter will limit the results to those owned by the given user."
+								},
+								{
+									"key": "column_names",
+									"value": "{{column_names}}",
+									"description": "Tabular assets are composed of rows and columns. The `column_names` parameter will limit the results to those having the given column names."
+								},
+								{
+									"key": "order",
+									"value": "{{order}}",
+									"description": "The results of all the above filters can be sorted by any of the attributes in the list below. If not specified, the results are sorted by relevance. All sort values can optionally append a space and either 'ASC' or 'DESC' for ascending or descending sorts, but note that the space must be URL-escaped with '+' or '%20'. The default for each attribute is given in the table.\n\nIt is possible for search results to have missing values for some of these sort fields (such as 'domain_category', for example). Any assets missing a value altogether for the field being sorted on will show up at the end of the results list.\nAttribute \tDefault Sort Order\nrelevance (default) \tdescending\nname \tascending\nowner \tascending\ndataset_id \tascending\ndatatype \tascending\ndomain_category \tascending\ncreatedAt \tdescending\nupdatedAt \tdescending\npage_views_total \tdescending\npage_views_last_month \tdescending\npage_views_last_week \tdescending"
+								},
+								{
+									"key": "derived",
+									"value": "{{derived}}",
+									"description": "Some assets are uploaded directly and others are created from already existing data. For example, charts are derived from an existing parent dataset. The `derived` parameter will limit the results to one or other of these classes of data. A 'true' value finds derived assets and a 'false' value finds base assets."
+								},
+								{
+									"key": "boostOfficial",
+									"value": "{{boostOfficial}}",
+									"description": "It is possible to adjust the rankings of official assets to promote them above community-created content. This leverages the weight function of [function score queries](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-function-score-query.html#function-weight) in Elasticsearch. This weight acts as a multiplier for the relevance score of each official document. Thus, a number between 0 and 1 will demote official assets, while any number greater than 1 will boost them."
+								}
+							]
+						},
+						"description": "Each asset is uniquely identified by a string of 9 characters. This string is a sequence of 4 alphanumeric characters, a dash, then 4 more alphanumeric characters. The `ids` parameter will limit the results to the assets identified by the given ids."
+					},
+					"response": []
+				},
+				{
+					"name": "Autocomplete asset names",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"description": "Use an application token so the API server can throttle by application, rather than via IP address, which grants higher throttling limits",
+								"key": "X-App-Token",
+								"type": "text",
+								"value": "{{app-token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.us.socrata.com/api/catalog/v1/autocomplete?q={{q}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"us",
+								"socrata",
+								"com"
+							],
+							"path": [
+								"api",
+								"catalog",
+								"v1",
+								"autocomplete"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "{{q}}",
+									"description": "Assets may be searched by any of the text found in the `name`, `description`, `category`, `tags`, `column names`, `column fieldnames`, `column descriptions`, `attribution` fields. The `q` parameter takes arbitrary text and will limit the results to those having some or all of the text. The optional `min_should_match` parameter may be used to explicitly specify the number or percent of words that must match. See the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-minimum-should-match.html) docs for the format of arguments to `min_should_match`. If `min_should_match` is not specified, the service's default is `3<60%`, meaning that if there are 3 or fewer search terms specified, all of them must match; otherwise 60% of the search terms must be found in the fields specified above.\n\nFor example, if `min_should_match` is `3<60%`:\n\n- Searching for 'city dog park' will require stemmed matches for all three words; thus, 'Western Cities Association Dog Parks' will match, but 'New York City Parks' will not.\n- Searching for 'trees green spaces new york' will require 60% of the words to match, which is 3 out of 5 words; thus, 'New York Tree Map', and 'New Green Spaces Initiative' will both match."
+								}
+							]
+						},
+						"description": "To improve the catalog search experience, we added an autocomplete API, which returns a list of titles that match the search query. This API supports all the same filtering parameters as the top-level complete search API. The response body has the same shape as the search API, containing 'resultSetSize', 'results', and 'timings' fields at the root of the response object. The 'results' differ however as an array of objects with the following two fields:\nField \tDescription\ntitle \tthe raw title matching the given query\ndisplay_title \tan html marked up variant of the raw title that provides highlighting\n\nNote that while this API mirrors the top-level search API, the behavior of the `q` parameter is slightly different in this case. Just as with the full search endpoint, it takes arbitrary text. However, the autocomplete search is restricted to the 'name' field of the asset (i.e. the asset title)."
+					},
+					"response": []
+				}
+			],
+			"description": "The Socrata data platform hosts tens of thousands of government datasets. Governments large and small publish data on crime, permits, finance, healthcare, research, performance, and more for citizens to use. While this large corpus of government data is already accessible via opendatanetwork.com, this API opens up the Socrata corpus of government data for automated searching, research, and exploration. Datasets can be found by keywords, high-level categorizations, tags, and much more. This API, then, is a powerful way to access and explore all public metadata published on the Socrata platform."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "821bcdbb-4f02-4cc2-94c3-91d54bc540e6",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "acdca5c4-f864-4cd9-8583-0a0b3d860c09",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "09bc925b-47ba-4c6d-91da-3960cc9bc42d",
+			"key": "domains",
+			"value": "data.seattle.gov,data.hawaii.gov",
+			"type": "string"
+		},
+		{
+			"id": "bc90819c-a065-472e-8072-103f8300b196",
+			"key": "ids",
+			"value": "2z5v-ecg8",
+			"type": "string"
+		},
+		{
+			"id": "c0c80bdc-4189-4c73-aede-b85e3b586dd7",
+			"key": "search_context",
+			"value": "data.seattle.gov",
+			"type": "string"
+		},
+		{
+			"id": "7a983caf-5c8e-4ca2-b2d2-37c3d651e5a0",
+			"key": "categories",
+			"value": "Education",
+			"type": "string"
+		},
+		{
+			"id": "e4d37369-82b2-4a08-b255-36c66a1b4eec",
+			"key": "tags",
+			"value": "families",
+			"type": "string"
+		},
+		{
+			"id": "3ed4202e-c810-43ae-9f32-f06034b18246",
+			"key": "q",
+			"value": "chicago crime",
+			"type": "string"
+		},
+		{
+			"id": "3be3ae9e-23b2-487c-8e1d-cd0506a27ce9",
+			"key": "min_should_match",
+			"value": "3<60%",
+			"type": "string"
+		},
+		{
+			"id": "91e240c6-ee79-4d63-88e8-1589e70e02e3",
+			"key": "only",
+			"value": "datasets",
+			"type": "string"
+		},
+		{
+			"id": "ac946b6a-c1f4-4a61-9de9-b00717dc9428",
+			"key": "attribution",
+			"value": "City of Chicago",
+			"type": "string"
+		},
+		{
+			"id": "46d4311f-f36a-4e7d-bb57-fc3ae29e8bb0",
+			"key": "license",
+			"value": "Creative Commons Attribution 3.0 Unported",
+			"type": "string"
+		},
+		{
+			"id": "b802e912-d4d4-4674-b003-76b3b11f7f16",
+			"key": "derived_from",
+			"value": "dk8m-pdjf",
+			"type": "string"
+		},
+		{
+			"id": "54a8dd0c-ef08-4da7-9ce3-b592e1637f30",
+			"key": "provenance",
+			"value": "official",
+			"type": "string"
+		},
+		{
+			"id": "feec4212-f72e-446f-a255-ce84ec326c70",
+			"key": "for_user",
+			"value": "2pz3-cb5i",
+			"type": "string"
+		},
+		{
+			"id": "22addc7b-a3f0-4214-bd25-e84b3e42bccf",
+			"key": "shared_to",
+			"value": "ep9i-8y45",
+			"type": "string"
+		},
+		{
+			"id": "a4d18be1-df3c-417e-8cb3-65ce19e0faf2",
+			"key": "column_names",
+			"value": "Permit Status",
+			"type": "string"
+		},
+		{
+			"id": "322e2cc8-2cde-4362-85c2-fbf9149173d2",
+			"key": "order",
+			"value": "page_views_total",
+			"type": "string"
+		},
+		{
+			"id": "0ff8e5d5-1b8f-4f31-9b78-3c751b828817",
+			"key": "derived",
+			"value": "false",
+			"type": "string"
+		},
+		{
+			"id": "ccc26eab-08a2-41cd-9312-c4434d07f434",
+			"key": "boostOfficial",
+			"value": "3.5",
+			"type": "string"
+		}
+	]
+}
