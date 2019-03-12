@@ -4,9 +4,17 @@ section CityOfSeattle;
 [DataSource.Kind="CityOfSeattle", Publish="CityOfSeattle.Publish"]
 shared CityOfSeattle.Contents = (optional message as text) =>
 let
-    Source = OData.Feed("https://data.seattle.gov/api/odata/v4/")
+    request = Web.Contents("http://data.seattle.gov/resource/grwu-wqtk.json"),
+    response = Json.Document(request),
+    response_status = Value.Metadata(request)[Response.Status],
+    response_headers = Value.Metadata(request)[Headers],
+    dataset_fields = Json.Document(response_headers[#"X-SODA2-Fields"]),
+    column_types = Json.Document(response_headers[#"X-SODA2-Types"]),
+    column_definition = List.Zip({dataset_fields, column_types}),
+    TableOfRecords = Table.FromList(response, Splitter.SplitByNothing(), {"seattle"}, null, ExtraValues.Error),
+    ExpandedSeattle = Table.ExpandRecordColumn(TableOfRecords, "seattle", Record.FieldNames(TableOfRecords{0}[seattle]))
 in
-    Source;
+    ExpandedSeattle;
 
 // Data Source Kind description
 CityOfSeattle = [
