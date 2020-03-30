@@ -95,8 +95,7 @@ in
 ```
 
 ## Power BI Report Examples
-+ [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiN2ZmM2RjYTAtMjBkMC00ODFkLTlmNzctZjZjYzQ5OGY1YzhlIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
-<iframe width="800" height="600" src="https://app.powerbi.com/view?r=eyJrIjoiYjA0ZmYxMzctMTUyMS00MjI3LWFkNmEtOGFiOTkyNDc1NWNkIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9" frameborder="0" allowFullScreen="true"></iframe>
++ [Seattle Real Time 911 Police Calls](https://app.powerbi.com/view?r=eyJrIjoiYjA0ZmYxMzctMTUyMS00MjI3LWFkNmEtOGFiOTkyNDc1NWNkIiwidCI6ImRjNTliNTFkLWVmZDItNDYyNi04M2EyLTljMmU2MzE1MTcwZiIsImMiOjZ9)
 
 ## Power BI Sample Template
 + [Power BI Template with Mapbox Visual](https://github.com/tonmcg/powersocrata/blob/master/samples/PowerSocrata.pbit)
